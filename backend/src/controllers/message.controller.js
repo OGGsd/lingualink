@@ -11,7 +11,6 @@ export const getAllContacts = async (req, res) => {
 
     res.status(200).json(filteredUsers);
   } catch (error) {
-    console.log("Error in getAllContacts:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -25,7 +24,6 @@ export const getMessagesByUserId = async (req, res) => {
 
     res.status(200).json(messages);
   } catch (error) {
-    console.log("Error in getMessages controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -36,13 +34,7 @@ export const sendMessage = async (req, res) => {
     const { id: receiverId } = req.params;
     const senderId = req.user._id;
 
-    console.log("SendMessage called with:", {
-      hasText: !!text,
-      hasImage: !!image,
-      imageLength: image ? image.length : 0,
-      receiverId,
-      senderId
-    });
+
 
     if (!text && !image) {
       return res.status(400).json({ message: "Text or image is required." });
@@ -63,31 +55,20 @@ export const sendMessage = async (req, res) => {
     let imageType = null;
 
     if (image) {
-      console.log("Processing image data...");
       // Validate image data
       const imageValidation = validateImageData(image);
-      console.log("Image validation result:", imageValidation);
       if (!imageValidation.valid) {
-        console.log("Image validation failed:", imageValidation.error);
         return res.status(400).json({ message: imageValidation.error });
       }
 
       imageType = imageValidation.mimeType;
       imageBuffer = Buffer.from(imageValidation.base64Data, 'base64');
       imageName = `image_${Date.now()}.${imageType.split('/')[1]}`;
-      console.log("Image processed successfully:", { imageType, imageName, bufferSize: imageBuffer.length });
     }
 
     // Extract translation metadata from request
     const { originalText, translatedFrom, translatedTo } = req.body;
     const isAutoTranslated = !!(originalText && translatedFrom && translatedTo);
-
-    console.log("Translation metadata:", {
-      hasOriginalText: !!originalText,
-      translatedFrom,
-      translatedTo,
-      isAutoTranslated
-    });
 
     // ⚡ FAST FLOW: Create message in database (this is fast)
     const newMessage = await Message.create({
@@ -116,10 +97,9 @@ export const sendMessage = async (req, res) => {
         translationType: 'auto',
         apiProvider: 'openai'
       }).then(() => {
-        console.log("✅ Translation history entry created (background)");
+        // Translation history entry created (background)
       }).catch((historyError) => {
-        console.error("❌ Failed to create translation history (background):", historyError);
-        // This won't affect the user experience
+        // Failed to create translation history (background) - this won't affect the user experience
       });
     }
 
@@ -127,16 +107,12 @@ export const sendMessage = async (req, res) => {
     const receiverSocketId = getReceiverSocketId(receiverId);
     const senderSocketId = getReceiverSocketId(senderId);
 
-    console.log("📡 Sending message to receiver:", receiverId, "socketId:", receiverSocketId);
-    console.log("📡 Sending message to sender:", senderId, "socketId:", senderSocketId);
-
     // Send to receiver - if message is auto-translated, receiver should see both original and translated
     if (receiverSocketId) {
       const messageForReceiver = { ...newMessage };
 
       // If this is an auto-translated message, ensure receiver sees the translation properly
       if (isAutoTranslated) {
-        console.log("📡 Sending auto-translated message to receiver with both texts");
         messageForReceiver.isAutoTranslated = true;
         messageForReceiver.originalText = originalText;
         messageForReceiver.translatedFrom = translatedFrom;
@@ -144,9 +120,6 @@ export const sendMessage = async (req, res) => {
       }
 
       io.to(receiverSocketId).emit("newMessage", messageForReceiver);
-      console.log("✅ Message sent to receiver via socket");
-    } else {
-      console.log("⚠️ Receiver not online");
     }
 
     // Also send to sender for real-time update (if they're on a different device/tab)
@@ -162,12 +135,10 @@ export const sendMessage = async (req, res) => {
       }
 
       io.to(senderSocketId).emit("newMessage", messageForSender);
-      console.log("✅ Message sent to sender via socket");
     }
 
     res.status(201).json(newMessage);
   } catch (error) {
-    console.log("Error in sendMessage controller: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -190,7 +161,6 @@ export const getChatPartners = async (req, res) => {
 
     res.status(200).json(chatPartners);
   } catch (error) {
-    console.error("Error in getChatPartners: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -212,7 +182,6 @@ export const getMessageImage = async (req, res) => {
 
     res.send(imageData.image);
   } catch (error) {
-    console.error("Error in getMessageImage: ", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -224,12 +193,7 @@ export const updateTranslation = async (req, res) => {
     const { translatedText, originalText, translatedFrom, translatedTo } = req.body;
     const senderId = req.user._id;
 
-    console.log(`🔄 Translation update for message ${messageId}:`, {
-      translatedText,
-      originalText,
-      translatedFrom,
-      translatedTo
-    });
+
 
     // Find the message to get receiver info
     const message = await Message.findById(messageId);
@@ -258,14 +222,10 @@ export const updateTranslation = async (req, res) => {
       };
 
       io.to(receiverSocketId).emit("translationUpdate", translationUpdate);
-      console.log("✅ Translation update sent to receiver via socket");
-    } else {
-      console.log("⚠️ Receiver not online for translation update");
     }
 
     res.status(200).json({ success: true, message: "Translation update sent" });
   } catch (error) {
-    console.error("❌ Error updating translation:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

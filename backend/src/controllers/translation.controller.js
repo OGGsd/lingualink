@@ -15,10 +15,9 @@ export const getSupportedLanguages = async (req, res) => {
       count: Object.keys(SUPPORTED_LANGUAGES).length
     });
   } catch (error) {
-    console.error("Error in getSupportedLanguages:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: "Internal server error" 
+      error: "Internal server error"
     });
   }
 };
@@ -77,10 +76,9 @@ export const translateMessage = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("Error in translateMessage:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: "Internal server error" 
+      error: "Internal server error"
     });
   }
 };
@@ -111,10 +109,9 @@ export const detectTextLanguage = async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error("Error in detectTextLanguage:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: "Internal server error" 
+      error: "Internal server error"
     });
   }
 };
@@ -196,10 +193,9 @@ export const batchTranslate = async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error("Error in batchTranslate:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: "Internal server error" 
+      error: "Internal server error"
     });
   }
 };
@@ -232,10 +228,9 @@ export const getTranslationStatus = async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error("Error in getTranslationStatus:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: "Internal server error" 
+      error: "Internal server error"
     });
   }
 };
@@ -249,7 +244,7 @@ export const translateMessageById = async (req, res) => {
     const { targetLanguage, sourceLanguage } = req.body;
     const userId = req.user.id;
 
-    console.log(`🌍 Manual translation request: messageId=${messageId}, target=${targetLanguage}, source=${sourceLanguage}`);
+
 
     // Get the message
     const messageQuery = 'SELECT * FROM messages WHERE id = $1';
@@ -293,7 +288,6 @@ export const translateMessageById = async (req, res) => {
         apiProvider: translationResult.provider || 'openai'
       });
     } catch (historyError) {
-      console.error("❌ Failed to create translation history:", historyError);
       // Continue even if history creation fails
     }
 
@@ -307,7 +301,6 @@ export const translateMessageById = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error in translateMessageById:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -320,7 +313,7 @@ export const getTranslationHistory = async (req, res) => {
     const userId = req.user.id;
     const { limit = 50, offset = 0 } = req.query;
 
-    console.log(`📚 Fetching translation history for user ${userId}`);
+
 
     const history = await TranslationHistory.findByUserId(
       userId,
@@ -339,7 +332,6 @@ export const getTranslationHistory = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error in getTranslationHistory:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

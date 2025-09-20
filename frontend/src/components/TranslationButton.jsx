@@ -17,8 +17,7 @@ const TranslationButton = ({ text, onTranslatedText, className = "" }) => {
     setAutoTranslateEnabled
   } = useTranslationStore();
 
-  // Debug logging
-  console.log("TranslationButton - text:", text, "userPreferredLanguage:", userPreferredLanguage, "isLoading:", isLoading);
+  // Debug logging removed for production security
 
   // AUTO-TRANSLATE: Detect language and translate to user's preferred language (or English as default)
   const handleAutoTranslate = async () => {
@@ -31,23 +30,18 @@ const TranslationButton = ({ text, onTranslatedText, className = "" }) => {
     try {
       // Use preferred language or default to English
       const targetLanguage = userPreferredLanguage || 'en';
-      console.log("🎯 Target language:", targetLanguage);
 
       // Detect source language first
       const detectedLang = await detectLanguage(text);
-      console.log("🔍 Detected language:", detectedLang);
 
       // If already in target language, no need to translate
       if (detectedLang === targetLanguage) {
-        console.log("✅ Already in target language, no translation needed");
         return;
       }
 
       const result = await translateText(text, targetLanguage, detectedLang);
-      console.log("📝 Translation result:", result);
       if (result && result.translatedText && onTranslatedText) {
         onTranslatedText(result.translatedText);
-        console.log("✅ Translation applied!");
       }
     } catch (error) {
       console.error("Auto-translation error:", error);

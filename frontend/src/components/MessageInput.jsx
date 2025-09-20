@@ -18,7 +18,6 @@ function MessageInput() {
     if (!text.trim() && !imagePreview) return;
     if (isSoundEnabled) playRandomKeyStrokeSound();
 
-    console.log("Sending message with image:", !!imagePreview);
     sendMessage({
       text: text.trim(),
       image: imagePreview,
@@ -30,23 +29,18 @@ function MessageInput() {
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    console.log("File selected:", file);
 
     if (!file) {
-      console.log("No file selected");
       return;
     }
 
     if (!file.type.startsWith("image/")) {
-      console.log("Invalid file type:", file.type);
       toast.error("Please select an image file");
       return;
     }
 
-    console.log("Processing image file:", file.name, file.type, file.size);
     const reader = new FileReader();
     reader.onloadend = () => {
-      console.log("Image loaded, data length:", reader.result.length);
       setImagePreview(reader.result);
     };
     reader.readAsDataURL(file);
@@ -106,8 +100,6 @@ function MessageInput() {
         <button
           type="button"
           onClick={() => {
-            console.log("Image button clicked");
-            console.log("File input ref:", fileInputRef.current);
             fileInputRef.current?.click();
           }}
           className={`bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg px-4 transition-colors ${

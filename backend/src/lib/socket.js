@@ -26,21 +26,14 @@ export function getReceiverSocketId(userId) {
 const userSocketMap = {}; // {userId:socketId}
 
 io.on("connection", (socket) => {
-  console.log("A user connected", socket.user.fullName);
-
   const userId = socket.user._id;
   userSocketMap[userId] = socket.id;
-
-  console.log("🔌 User connected - ID:", userId, "Type:", typeof userId);
-  console.log("🔌 Current userSocketMap keys:", Object.keys(userSocketMap));
 
   // io.emit() is used to send events to all connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
   // Listen for settings changes and broadcast to user's other devices
   socket.on("settingsChanged", (data) => {
-    console.log(`🔄 Settings changed for user ${socket.user.fullName}:`, data);
-
     // Find all sockets for this user (multiple devices/tabs)
     const userSockets = Object.entries(userSocketMap)
       .filter(([id, socketId]) => id === userId)
@@ -52,16 +45,13 @@ io.on("connection", (socket) => {
         io.to(socketId).emit("settingsUpdated", {
           [data.type]: data.value
         });
-        console.log(`📡 Settings update sent to socket ${socketId}`);
       }
     });
   });
 
   // with socket.on we listen for events from clients
   socket.on("disconnect", () => {
-    console.log("A user disconnected", socket.user.fullName);
     delete userSocketMap[userId];
-    console.log("🔌 User disconnected - remaining keys:", Object.keys(userSocketMap));
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });

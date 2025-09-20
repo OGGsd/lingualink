@@ -2,10 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useTranslationStore } from "../store/useTranslationStore";
 import { axiosInstance } from "../lib/axios";
-import { User, Lock, Globe, Key, Save, TestTube, Eye, EyeOff, Camera, Upload, Wifi, ArrowLeft } from "lucide-react";
+import { User, Lock, Globe, Key, Save, TestTube, Eye, EyeOff, Camera, Upload, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import LanguageSelector from "../components/LanguageSelector";
-import keepAliveService from "../services/keepAliveService";
 import toast from "react-hot-toast";
 
 const SettingsPage = () => {
@@ -53,7 +52,7 @@ const SettingsPage = () => {
         setHasCustomApiKey(response.data.settings.hasCustomApiKey);
       }
     } catch (error) {
-      console.error("Error fetching settings:", error);
+      // Error fetching settings
     }
   };
 
@@ -153,11 +152,6 @@ const SettingsPage = () => {
     setIsUpdatingTranslation(true);
 
     try {
-      console.log("🔄 Updating translation settings:", {
-        preferredLanguage: userPreferredLanguage,
-        hasCustomApiKey: !!customApiKey
-      });
-
       // Update via the store's database-driven setter
       await setUserPreferredLanguage(userPreferredLanguage);
 
@@ -170,17 +164,14 @@ const SettingsPage = () => {
 
         if (response.data.success) {
           setHasCustomApiKey(!!customApiKey);
-          console.log("✅ API key updated successfully");
         } else {
           throw new Error(response.data.error || "Failed to update API key");
         }
       }
 
       toast.success("Translation settings updated and saved to database!");
-      console.log("✅ Translation settings updated successfully");
 
     } catch (error) {
-      console.error("❌ Error updating translation settings:", error);
       toast.error(error.response?.data?.error || error.message || "Failed to update translation settings");
     } finally {
       setIsUpdatingTranslation(false);
@@ -217,12 +208,9 @@ const SettingsPage = () => {
         {/* Back Button */}
         <button
           onClick={() => {
-            console.log("🔙 Back to Chat button clicked - navigating to /");
             try {
               navigate("/");
-              console.log("✅ Navigation to / successful");
             } catch (error) {
-              console.error("❌ Navigation error:", error);
               // Fallback navigation
               window.location.href = "/";
             }
@@ -416,10 +404,10 @@ const SettingsPage = () => {
                 <LanguageSelector
                   selectedLanguage={userPreferredLanguage}
                   onLanguageChange={setUserPreferredLanguage}
-                  label="Select your preferred language for auto-translation"
+                  label="Select your preferred language for translation"
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  Messages will be auto-translated to this language when you use the ⚡ button
+                  This will be your default language when translating messages manually
                 </p>
               </div>
 
@@ -488,20 +476,7 @@ const SettingsPage = () => {
             </form>
           </div>
 
-          {/* Keep-Alive Service Test (Development/Testing) */}
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-600/20 rounded-xl p-6">
-            <div className="flex items-center mb-4">
-              <Wifi className="w-5 h-5 text-green-400 mr-3" />
-              <h2 className="text-xl font-semibold text-white">Keep-Alive Service</h2>
-            </div>
 
-            <div className="space-y-4">
-              <div className="text-sm text-slate-300">
-                <p>This service prevents the backend from sleeping on Render's free tier by sending a ping every 10 minutes.</p>
-                <p className="text-green-400 mt-2">✅ Service is automatically running in the background</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

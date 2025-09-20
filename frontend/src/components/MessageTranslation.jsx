@@ -27,10 +27,8 @@ const MessageTranslation = ({ message, className = "" }) => {
         setIsExpanded(true);
       } else {
         // Translation failed, but don't show error to user
-        console.warn("Translation failed for message");
       }
     } catch (error) {
-      console.error("Translation error:", error);
       // Error is already handled by the translation store
     } finally {
       setIsTranslating(false);

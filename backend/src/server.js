@@ -63,7 +63,6 @@ if (ENV.NODE_ENV === "production") {
         const indexPath = path.join(frontendDistPath, "index.html");
         res.sendFile(indexPath, (err) => {
           if (err) {
-            console.log("Frontend files not found, serving API-only mode");
             res.status(404).json({
               message: "Frontend not available - API-only mode",
               api: "Backend API is running successfully"
@@ -75,11 +74,10 @@ if (ENV.NODE_ENV === "production") {
       }
     });
   } catch (error) {
-    console.log("Frontend dist directory not found, running in API-only mode");
+    // Frontend dist directory not found, running in API-only mode
   }
 }
 
 server.listen(PORT, () => {
-  console.log("Server running on port: " + PORT);
   connectDB();
 });

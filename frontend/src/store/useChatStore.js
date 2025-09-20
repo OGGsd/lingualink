@@ -28,7 +28,6 @@ export const useChatStore = create((set, get) => ({
       // Update in database
       await setSoundEnabled(newSoundState);
     } catch (error) {
-      console.error("❌ Error toggling sound:", error);
       // Revert optimistic update on error
       set({ isSoundEnabled: !get().isSoundEnabled });
     }
@@ -42,9 +41,8 @@ export const useChatStore = create((set, get) => ({
         isSoundEnabled: soundEnabled,
         soundSettingsLoaded: true
       });
-      console.log("🔊 Sound settings synced from translation store:", soundEnabled);
     } catch (error) {
-      console.error("❌ Error syncing sound settings:", error);
+      // Error syncing sound settings
     }
   },
 
@@ -89,17 +87,8 @@ export const useChatStore = create((set, get) => ({
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
 
-    console.log("🚀 SEND MESSAGE:", {
-      hasText: !!messageData.text,
-      hasImage: !!messageData.image
-    });
-
     try {
-      console.log("📤 Sending to backend:", messageData);
-
       const response = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-
-      console.log("✅ Message sent successfully:", response.data);
 
       // 🔄 UPDATE LOCAL MESSAGES (the socket will handle receiver updates)
       set(state => ({
@@ -107,7 +96,6 @@ export const useChatStore = create((set, get) => ({
       }));
 
     } catch (error) {
-      console.error("❌ Error sending message:", error);
       toast.error("Failed to send message");
     }
   },
@@ -126,14 +114,10 @@ export const useChatStore = create((set, get) => ({
     socket.off("translationUpdate");
 
     socket.on("newMessage", (newMessage) => {
-      console.log("📨 Received new message:", newMessage);
-
       // Check if this message is part of the current conversation
       const isMessageForCurrentConversation =
         (newMessage.senderId === selectedUser._id && newMessage.receiverId === authUser._id) ||
         (newMessage.senderId === authUser._id && newMessage.receiverId === selectedUser._id);
-
-      console.log("Is message for current conversation:", isMessageForCurrentConversation);
 
       if (!isMessageForCurrentConversation) return;
 
@@ -147,18 +131,18 @@ export const useChatStore = create((set, get) => ({
       // Check if message already exists (to prevent duplicates)
       const messageExists = currentMessages.some(msg => msg._id === newMessage._id);
       if (messageExists) {
-        console.log("Message already exists, skipping duplicate");
         return;
       }
 
-      console.log("Adding new message to chat");
       set({ messages: [...currentMessages, newMessage] });
 
       // Play notification sound only for received messages (not sent by current user)
       if (newMessage.senderId !== authUser._id && isSoundEnabled) {
         const notificationSound = new Audio("/sounds/notification.mp3");
         notificationSound.currentTime = 0;
-        notificationSound.play().catch((e) => console.log("Audio play failed:", e));
+        notificationSound.play().catch(() => {
+          // Audio play failed - silent fail for production
+        });
       }
     });
 
@@ -167,7 +151,6 @@ export const useChatStore = create((set, get) => ({
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
-    console.log("Unsubscribing from messages");
     socket.off("newMessage");
     socket.off("translationUpdate");
   },

@@ -146,7 +146,6 @@ export const useTranslationStore = create((set, get) => ({
         throw new Error(response.data.error || "Translation failed");
       }
     } catch (error) {
-      console.error("Error translating text:", error);
       const errorMessage = "Failed to translate, try again later";
       set({
         error: errorMessage,
@@ -171,7 +170,6 @@ export const useTranslationStore = create((set, get) => ({
         throw new Error(response.data.error || "Language detection failed");
       }
     } catch (error) {
-      console.error("Error detecting language:", error);
       toast.error("Language detection failed");
       return null;
     }
@@ -358,7 +356,6 @@ export const useTranslationStore = create((set, get) => ({
         throw new Error(response.data.error || "Failed to fetch translation stats");
       }
     } catch (error) {
-      console.error("❌ Error fetching translation stats:", error);
       toast.error("Failed to load translation statistics");
       return null;
     }
@@ -396,7 +393,6 @@ export const useTranslationStore = create((set, get) => ({
         throw new Error(response.data.error || "Translation failed");
       }
     } catch (error) {
-      console.error("❌ Message translation error:", error);
       set({ isLoading: false, error: error.message });
       toast.error(error.response?.data?.error || "Translation failed");
       return null;

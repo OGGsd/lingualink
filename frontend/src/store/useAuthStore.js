@@ -19,7 +19,6 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
-      console.log("Error in authCheck:", error);
       set({ authUser: null });
     } finally {
       set({ isCheckingAuth: false });
@@ -65,7 +64,6 @@ export const useAuthStore = create((set, get) => ({
       get().disconnectSocket();
     } catch (error) {
       toast.error("Error logging out");
-      console.log("Logout error:", error);
     }
   },
 
@@ -75,7 +73,6 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Profile updated successfully");
     } catch (error) {
-      console.log("Error in update profile:", error);
       toast.error(error.response.data.message);
     }
   },
@@ -99,7 +96,6 @@ export const useAuthStore = create((set, get) => ({
     });
 
     socket.on("connect_error", (error) => {
-      console.warn("Socket connection error (will retry automatically):", error.message);
       // Socket.io will automatically retry connection
     });
 
@@ -117,7 +113,6 @@ export const useAuthStore = create((set, get) => ({
 
     // Listen for real-time profile updates
     socket.on("profileUpdated", (profileData) => {
-      console.log("🔄 Profile updated from server:", profileData);
       const currentUser = get().authUser;
       if (currentUser) {
         set({
@@ -126,7 +121,6 @@ export const useAuthStore = create((set, get) => ({
             ...profileData
           }
         });
-        console.log("✅ Profile updated in real-time");
       }
     });
   },
