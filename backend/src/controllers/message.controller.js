@@ -130,9 +130,20 @@ export const sendMessage = async (req, res) => {
     console.log("📡 Sending message to receiver:", receiverId, "socketId:", receiverSocketId);
     console.log("📡 Sending message to sender:", senderId, "socketId:", senderSocketId);
 
-    // Send to receiver
+    // Send to receiver - if message is auto-translated, receiver should see both original and translated
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      const messageForReceiver = { ...newMessage };
+
+      // If this is an auto-translated message, ensure receiver sees the translation properly
+      if (isAutoTranslated) {
+        console.log("📡 Sending auto-translated message to receiver with both texts");
+        messageForReceiver.isAutoTranslated = true;
+        messageForReceiver.originalText = originalText;
+        messageForReceiver.translatedFrom = translatedFrom;
+        messageForReceiver.translatedTo = translatedTo;
+      }
+
+      io.to(receiverSocketId).emit("newMessage", messageForReceiver);
       console.log("✅ Message sent to receiver via socket");
     } else {
       console.log("⚠️ Receiver not online");
@@ -140,7 +151,17 @@ export const sendMessage = async (req, res) => {
 
     // Also send to sender for real-time update (if they're on a different device/tab)
     if (senderSocketId && senderSocketId !== receiverSocketId) {
-      io.to(senderSocketId).emit("newMessage", newMessage);
+      const messageForSender = { ...newMessage };
+
+      // Sender should also see the translation data
+      if (isAutoTranslated) {
+        messageForSender.isAutoTranslated = true;
+        messageForSender.originalText = originalText;
+        messageForSender.translatedFrom = translatedFrom;
+        messageForSender.translatedTo = translatedTo;
+      }
+
+      io.to(senderSocketId).emit("newMessage", messageForSender);
       console.log("✅ Message sent to sender via socket");
     }
 
