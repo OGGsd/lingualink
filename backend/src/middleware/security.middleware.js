@@ -10,15 +10,6 @@ export const generalRateLimit = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Configure for proxy environments (Render, Heroku, etc.)
-  trustProxy: ENV.NODE_ENV === 'production',
-  keyGenerator: (req) => {
-    // In production with proxy, use X-Forwarded-For header
-    if (ENV.NODE_ENV === 'production') {
-      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
-    }
-    return req.ip;
-  },
   skip: () => {
     // Skip rate limiting in development or when dev rate limits are allowed
     return ENV.NODE_ENV === 'development' || ENV.ALLOW_DEV_RATE_LIMITS === 'true';
@@ -34,15 +25,6 @@ export const authRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Configure for proxy environments (Render, Heroku, etc.)
-  trustProxy: ENV.NODE_ENV === 'production',
-  keyGenerator: (req) => {
-    // In production with proxy, use X-Forwarded-For header
-    if (ENV.NODE_ENV === 'production') {
-      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
-    }
-    return req.ip;
-  },
   skip: () => {
     // Skip rate limiting in development or when dev rate limits are allowed
     return ENV.NODE_ENV === 'development' || ENV.ALLOW_DEV_RATE_LIMITS === 'true';
@@ -58,15 +40,6 @@ export const messageRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Configure for proxy environments (Render, Heroku, etc.)
-  trustProxy: ENV.NODE_ENV === 'production',
-  keyGenerator: (req) => {
-    // In production with proxy, use X-Forwarded-For header
-    if (ENV.NODE_ENV === 'production') {
-      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
-    }
-    return req.ip;
-  },
   skip: () => {
     // Skip rate limiting in development
     return ENV.NODE_ENV === 'development';
@@ -82,15 +55,6 @@ export const uploadRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Configure for proxy environments (Render, Heroku, etc.)
-  trustProxy: ENV.NODE_ENV === 'production',
-  keyGenerator: (req) => {
-    // In production with proxy, use X-Forwarded-For header
-    if (ENV.NODE_ENV === 'production') {
-      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
-    }
-    return req.ip;
-  },
   skip: () => {
     // Skip rate limiting in development
     return ENV.NODE_ENV === 'development';

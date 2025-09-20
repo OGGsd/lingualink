@@ -160,7 +160,7 @@ class UserSettings {
       CREATE TABLE IF NOT EXISTS user_settings (
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        preferred_language VARCHAR(10) DEFAULT 'en',
+        preferred_language VARCHAR(20) DEFAULT 'en',
         auto_translate_enabled BOOLEAN DEFAULT false,
         sound_enabled BOOLEAN DEFAULT true,
         openai_api_key TEXT,

@@ -19,9 +19,9 @@ const __dirname = path.resolve();
 
 const PORT = ENV.PORT || 3000;
 
-// Trust proxy for Render deployment
+// Trust proxy for Render deployment - use specific number instead of true for security
 if (ENV.NODE_ENV === "production") {
-  app.set('trust proxy', true);
+  app.set('trust proxy', 1); // Trust first proxy (Render's load balancer)
 }
 
 // Security middleware

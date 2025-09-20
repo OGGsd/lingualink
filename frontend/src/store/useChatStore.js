@@ -116,7 +116,7 @@ export const useChatStore = create((set, get) => ({
         console.log(`🔍 Detected sender language: ${detectedLang}`);
 
         // Extract language code from detection result
-        const detectedLanguageCode = detectedLang?.language || detectedLang;
+        const detectedLanguageCode = detectedLang?.language || 'en';
         console.log("🔍 Detected language code:", detectedLanguageCode);
 
         // Only translate if languages are different

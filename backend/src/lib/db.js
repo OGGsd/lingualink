@@ -54,8 +54,8 @@ const createTables = async () => {
         receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         text TEXT,
         original_text TEXT,
-        translated_from VARCHAR(10),
-        translated_to VARCHAR(10),
+        translated_from VARCHAR(20),
+        translated_to VARCHAR(20),
         is_auto_translated BOOLEAN DEFAULT false,
         image BYTEA,
         image_name VARCHAR(255),
@@ -111,8 +111,8 @@ const runMigrations = async () => {
       await pool.query(`
         ALTER TABLE messages
         ADD COLUMN IF NOT EXISTS original_text TEXT,
-        ADD COLUMN IF NOT EXISTS translated_from VARCHAR(10),
-        ADD COLUMN IF NOT EXISTS translated_to VARCHAR(10),
+        ADD COLUMN IF NOT EXISTS translated_from VARCHAR(20),
+        ADD COLUMN IF NOT EXISTS translated_to VARCHAR(20),
         ADD COLUMN IF NOT EXISTS is_auto_translated BOOLEAN DEFAULT false
       `);
 
@@ -142,6 +142,32 @@ const runMigrations = async () => {
     } else {
       console.log("✅ Sound settings column already exists");
     }
+
+    // Update language column sizes to support longer language codes
+    console.log("📝 Updating language column sizes...");
+    try {
+      await pool.query(`
+        ALTER TABLE messages
+        ALTER COLUMN translated_from TYPE VARCHAR(20),
+        ALTER COLUMN translated_to TYPE VARCHAR(20)
+      `);
+
+      await pool.query(`
+        ALTER TABLE user_settings
+        ALTER COLUMN preferred_language TYPE VARCHAR(20)
+      `);
+
+      await pool.query(`
+        ALTER TABLE translation_history
+        ALTER COLUMN source_language TYPE VARCHAR(20),
+        ALTER COLUMN target_language TYPE VARCHAR(20)
+      `);
+
+      console.log("✅ Language column sizes updated successfully");
+    } catch (columnError) {
+      console.log("⚠️ Language columns may already be updated:", columnError.message);
+    }
+
   } catch (error) {
     console.error("❌ Error running migrations:", error);
     // Don't throw error for migrations, just log it
