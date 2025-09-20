@@ -13,7 +13,8 @@ const SettingsPage = () => {
   const { authUser } = useAuthStore();
   const {
     userPreferredLanguage,
-    setUserPreferredLanguage
+    setUserPreferredLanguage,
+    loadUserSettings
   } = useTranslationStore();
 
   // Profile state
@@ -41,7 +42,9 @@ const SettingsPage = () => {
 
   useEffect(() => {
     fetchUserSettings();
-  }, []);
+    // Load translation settings from database
+    loadUserSettings();
+  }, [loadUserSettings]);
 
   const fetchUserSettings = async () => {
     try {
@@ -148,22 +151,37 @@ const SettingsPage = () => {
   const handleUpdateTranslationSettings = async (e) => {
     e.preventDefault();
     setIsUpdatingTranslation(true);
-    
+
     try {
-      const response = await axiosInstance.put("/settings/translation", {
+      console.log("🔄 Updating translation settings:", {
         preferredLanguage: userPreferredLanguage,
-        openaiApiKey: customApiKey || null
+        hasCustomApiKey: !!customApiKey
       });
 
-      if (response.data.success) {
-        toast.success("Translation settings updated!");
-        // Settings are now updated via the store's database-driven setters
-        setHasCustomApiKey(!!customApiKey);
-      } else {
-        toast.error(response.data.error || "Failed to update settings");
+      // Update via the store's database-driven setter
+      await setUserPreferredLanguage(userPreferredLanguage);
+
+      // Update API key separately if provided
+      if (customApiKey !== undefined) {
+        const response = await axiosInstance.put("/settings/translation", {
+          preferredLanguage: userPreferredLanguage,
+          openaiApiKey: customApiKey || null
+        });
+
+        if (response.data.success) {
+          setHasCustomApiKey(!!customApiKey);
+          console.log("✅ API key updated successfully");
+        } else {
+          throw new Error(response.data.error || "Failed to update API key");
+        }
       }
+
+      toast.success("Translation settings updated and saved to database!");
+      console.log("✅ Translation settings updated successfully");
+
     } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to update translation settings");
+      console.error("❌ Error updating translation settings:", error);
+      toast.error(error.response?.data?.error || error.message || "Failed to update translation settings");
     } finally {
       setIsUpdatingTranslation(false);
     }
@@ -199,10 +217,17 @@ const SettingsPage = () => {
         {/* Back Button */}
         <button
           onClick={() => {
-            console.log("Back to Chat button clicked");
-            navigate("/");
+            console.log("🔙 Back to Chat button clicked - navigating to /");
+            try {
+              navigate("/");
+              console.log("✅ Navigation to / successful");
+            } catch (error) {
+              console.error("❌ Navigation error:", error);
+              // Fallback navigation
+              window.location.href = "/";
+            }
           }}
-          className="mb-6 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-200 group"
+          className="mb-6 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-200 group hover:bg-slate-800/30 px-3 py-2 rounded-lg"
         >
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
           Back to Chat
