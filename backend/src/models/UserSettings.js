@@ -9,7 +9,6 @@ class UserSettings {
       SELECT
         user_id,
         preferred_language,
-        auto_translate_enabled,
         sound_enabled,
         openai_api_key,
         created_at,
@@ -78,8 +77,8 @@ class UserSettings {
    * Update specific setting
    */
   static async updateSetting(userId, settingName, value) {
-    const allowedSettings = ['preferred_language', 'auto_translate_enabled', 'openai_api_key'];
-    
+    const allowedSettings = ['preferred_language', 'sound_enabled', 'openai_api_key'];
+
     if (!allowedSettings.includes(settingName)) {
       throw new Error(`Invalid setting name: ${settingName}`);
     }
@@ -158,7 +157,6 @@ class UserSettings {
         id SERIAL PRIMARY KEY,
         user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
         preferred_language VARCHAR(20) DEFAULT 'en',
-        auto_translate_enabled BOOLEAN DEFAULT false,
         sound_enabled BOOLEAN DEFAULT true,
         openai_api_key TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

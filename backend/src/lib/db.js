@@ -202,6 +202,32 @@ const runMigrations = async () => {
 
     console.log("✅ All language column size migrations completed successfully");
 
+    // 🚨 MIGRATION: Remove auto_translate_enabled column from user_settings table
+    console.log("📝 Checking if auto_translate_enabled column needs to be removed...");
+
+    const checkAutoTranslateColumn = await pool.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'user_settings'
+      AND column_name = 'auto_translate_enabled'
+    `);
+
+    if (checkAutoTranslateColumn.rows.length > 0) {
+      console.log("🔄 Removing auto_translate_enabled column from user_settings table...");
+
+      try {
+        await pool.query(`ALTER TABLE user_settings DROP COLUMN IF EXISTS auto_translate_enabled`);
+        console.log("✅ auto_translate_enabled column removed successfully");
+      } catch (dropError) {
+        console.error("❌ Error removing auto_translate_enabled column:", dropError);
+        // Continue with other migrations even if this fails
+      }
+    } else {
+      console.log("✅ auto_translate_enabled column already removed or doesn't exist");
+    }
+
+    console.log("✅ All database migrations completed successfully");
+
   } catch (error) {
     console.error("❌ Error running migrations:", error);
     // Don't throw error for migrations, just log it
