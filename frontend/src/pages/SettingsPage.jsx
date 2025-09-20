@@ -3,7 +3,7 @@ import { useAuthStore } from "../store/useAuthStore";
 import { useTranslationStore } from "../store/useTranslationStore";
 import { axiosInstance } from "../lib/axios";
 import { User, Lock, Globe, Key, Save, TestTube, Eye, EyeOff, Camera, Upload, Wifi, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import LanguageSelector from "../components/LanguageSelector";
 import keepAliveService from "../services/keepAliveService";
 import toast from "react-hot-toast";
