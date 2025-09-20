@@ -143,30 +143,64 @@ const runMigrations = async () => {
       console.log("✅ Sound settings column already exists");
     }
 
-    // Update language column sizes to support longer language codes
-    console.log("📝 Updating language column sizes...");
-    try {
-      await pool.query(`
-        ALTER TABLE messages
-        ALTER COLUMN translated_from TYPE VARCHAR(20),
-        ALTER COLUMN translated_to TYPE VARCHAR(20)
-      `);
+    // AUTOMATIC MIGRATION: Update language column sizes to support longer language codes
+    console.log("📝 Checking and updating language column sizes...");
 
-      await pool.query(`
-        ALTER TABLE user_settings
-        ALTER COLUMN preferred_language TYPE VARCHAR(20)
-      `);
+    // Check messages table columns
+    const messagesColumnsResult = await pool.query(`
+      SELECT column_name, character_maximum_length
+      FROM information_schema.columns
+      WHERE table_name = 'messages'
+      AND column_name IN ('translated_from', 'translated_to')
+    `);
 
-      await pool.query(`
-        ALTER TABLE translation_history
-        ALTER COLUMN source_language TYPE VARCHAR(20),
-        ALTER COLUMN target_language TYPE VARCHAR(20)
-      `);
-
-      console.log("✅ Language column sizes updated successfully");
-    } catch (columnError) {
-      console.log("⚠️ Language columns may already be updated:", columnError.message);
+    for (const column of messagesColumnsResult.rows) {
+      if (column.character_maximum_length < 20) {
+        console.log(`🔄 Updating messages.${column.column_name} from VARCHAR(${column.character_maximum_length}) to VARCHAR(20)`);
+        await pool.query(`ALTER TABLE messages ALTER COLUMN ${column.column_name} TYPE VARCHAR(20)`);
+        console.log(`✅ Updated messages.${column.column_name} successfully`);
+      } else {
+        console.log(`✅ messages.${column.column_name} already VARCHAR(${column.character_maximum_length})`);
+      }
     }
+
+    // Check user_settings table columns
+    const userSettingsColumnsResult = await pool.query(`
+      SELECT column_name, character_maximum_length
+      FROM information_schema.columns
+      WHERE table_name = 'user_settings'
+      AND column_name = 'preferred_language'
+    `);
+
+    for (const column of userSettingsColumnsResult.rows) {
+      if (column.character_maximum_length < 20) {
+        console.log(`🔄 Updating user_settings.${column.column_name} from VARCHAR(${column.character_maximum_length}) to VARCHAR(20)`);
+        await pool.query(`ALTER TABLE user_settings ALTER COLUMN ${column.column_name} TYPE VARCHAR(20)`);
+        console.log(`✅ Updated user_settings.${column.column_name} successfully`);
+      } else {
+        console.log(`✅ user_settings.${column.column_name} already VARCHAR(${column.character_maximum_length})`);
+      }
+    }
+
+    // Check translation_history table columns
+    const translationHistoryColumnsResult = await pool.query(`
+      SELECT column_name, character_maximum_length
+      FROM information_schema.columns
+      WHERE table_name = 'translation_history'
+      AND column_name IN ('source_language', 'target_language')
+    `);
+
+    for (const column of translationHistoryColumnsResult.rows) {
+      if (column.character_maximum_length < 20) {
+        console.log(`🔄 Updating translation_history.${column.column_name} from VARCHAR(${column.character_maximum_length}) to VARCHAR(20)`);
+        await pool.query(`ALTER TABLE translation_history ALTER COLUMN ${column.column_name} TYPE VARCHAR(20)`);
+        console.log(`✅ Updated translation_history.${column.column_name} successfully`);
+      } else {
+        console.log(`✅ translation_history.${column.column_name} already VARCHAR(${column.character_maximum_length})`);
+      }
+    }
+
+    console.log("✅ All language column size migrations completed successfully");
 
   } catch (error) {
     console.error("❌ Error running migrations:", error);
