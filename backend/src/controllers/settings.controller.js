@@ -35,7 +35,6 @@ export const getUserProfile = async (req, res) => {
       },
       settings: {
         preferredLanguage: settings.preferredLanguage,
-        autoTranslateEnabled: settings.autoTranslateEnabled,
         hasCustomApiKey: !!settings.openaiApiKey,
         createdAt: settings.createdAt,
         updatedAt: settings.updatedAt
@@ -185,7 +184,6 @@ export const getTranslationSettings = async (req, res) => {
       success: true,
       settings: {
         preferredLanguage: settings.preferredLanguage,
-        autoTranslateEnabled: settings.autoTranslateEnabled,
         soundEnabled: settings.soundEnabled,
         hasCustomApiKey: !!settings.openaiApiKey
       },
@@ -241,7 +239,7 @@ export const getUserPublicSettings = async (req, res) => {
 export const updateTranslationSettings = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { preferredLanguage, autoTranslateEnabled, soundEnabled, openaiApiKey } = req.body;
+    const { preferredLanguage, soundEnabled, openaiApiKey } = req.body;
 
     // Validation
     if (preferredLanguage && !SUPPORTED_LANGUAGES[preferredLanguage]) {
@@ -254,7 +252,6 @@ export const updateTranslationSettings = async (req, res) => {
     // Prepare settings object
     const settingsUpdate = {};
     if (preferredLanguage !== undefined) settingsUpdate.preferredLanguage = preferredLanguage;
-    if (autoTranslateEnabled !== undefined) settingsUpdate.autoTranslateEnabled = autoTranslateEnabled;
     if (soundEnabled !== undefined) settingsUpdate.soundEnabled = soundEnabled;
     if (openaiApiKey !== undefined) settingsUpdate.openaiApiKey = openaiApiKey || null;
 
@@ -266,7 +263,6 @@ export const updateTranslationSettings = async (req, res) => {
     if (userSocketId) {
       io.to(userSocketId).emit("settingsUpdated", {
         preferredLanguage: updatedSettings.preferredLanguage,
-        autoTranslateEnabled: updatedSettings.autoTranslateEnabled,
         soundEnabled: updatedSettings.soundEnabled,
         hasCustomApiKey: !!updatedSettings.openaiApiKey,
         updatedAt: updatedSettings.updatedAt
@@ -278,7 +274,6 @@ export const updateTranslationSettings = async (req, res) => {
       message: "Translation settings updated successfully",
       settings: {
         preferredLanguage: updatedSettings.preferredLanguage,
-        autoTranslateEnabled: updatedSettings.autoTranslateEnabled,
         soundEnabled: updatedSettings.soundEnabled,
         hasCustomApiKey: !!updatedSettings.openaiApiKey,
         updatedAt: updatedSettings.updatedAt

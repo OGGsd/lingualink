@@ -11,11 +11,9 @@ import toast from "react-hot-toast";
 const SettingsPage = () => {
   const navigate = useNavigate();
   const { authUser } = useAuthStore();
-  const { 
-    userPreferredLanguage, 
-    autoTranslateEnabled,
-    setUserPreferredLanguage,
-    setAutoTranslateEnabled 
+  const {
+    userPreferredLanguage,
+    setUserPreferredLanguage
   } = useTranslationStore();
 
   // Profile state
@@ -154,7 +152,6 @@ const SettingsPage = () => {
     try {
       const response = await axiosInstance.put("/settings/translation", {
         preferredLanguage: userPreferredLanguage,
-        autoTranslateEnabled: autoTranslateEnabled,
         openaiApiKey: customApiKey || null
       });
 
@@ -401,30 +398,7 @@ const SettingsPage = () => {
                 </p>
               </div>
 
-              {/* Auto-translate Toggle */}
-              <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                <div>
-                  <label className="text-sm font-medium text-slate-200">
-                    Auto-translate incoming messages
-                  </label>
-                  <p className="text-xs text-slate-400">
-                    Automatically translate received messages to your preferred language
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAutoTranslateEnabled(!autoTranslateEnabled)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    autoTranslateEnabled ? 'bg-cyan-500' : 'bg-slate-600'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      autoTranslateEnabled ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+
 
               {/* Custom OpenAI API Key */}
               <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">

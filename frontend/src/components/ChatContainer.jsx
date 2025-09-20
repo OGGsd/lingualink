@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
-import { useTranslationStore } from "../store/useTranslationStore";
+
 import ChatHeader from "./ChatHeader";
 import NoChatHistoryPlaceholder from "./NoChatHistoryPlaceholder";
 import MessageInput from "./MessageInput";
 import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import MessageTranslation from "./MessageTranslation";
-import { Globe, Languages } from "lucide-react";
+
 
 function ChatContainer() {
   const {
@@ -19,7 +19,7 @@ function ChatContainer() {
     unsubscribeFromMessages,
   } = useChatStore();
   const { authUser } = useAuthStore();
-  const { autoTranslateEnabled, getLanguageName } = useTranslationStore();
+
   const messageEndRef = useRef(null);
 
   useEffect(() => {
@@ -58,45 +58,10 @@ function ChatContainer() {
                     <img src={msg.image} alt="Shared" className="rounded-lg h-48 object-cover" />
                   )}
 
-                  {/* Message text with auto-translate support */}
+                  {/* Message text */}
                   {msg.text && (
                     <div className="mt-2">
-
-                      {/* Show translated text if auto-translate is enabled and message has translation data */}
-                      {autoTranslateEnabled && (msg.isAutoTranslated || msg.originalText) ? (
-                        <div className="space-y-2">
-                          {/* Translated text (primary) */}
-                          <div>
-                            <p>{msg.text}</p>
-                            {msg.translatedTo && (
-                              <div className="flex items-center gap-1 mt-1">
-                                <Globe className="w-3 h-3 opacity-60" />
-                                <span className="text-xs opacity-60">
-                                  Translated to {getLanguageName(msg.translatedTo)}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Original text (secondary) */}
-                          {msg.originalText && (
-                            <div className="border-t border-white/10 pt-2">
-                              <p className="text-xs opacity-75 italic">"{msg.originalText}"</p>
-                              {msg.translatedFrom && (
-                                <div className="flex items-center gap-1 mt-1">
-                                  <Languages className="w-3 h-3 opacity-50" />
-                                  <span className="text-xs opacity-50">
-                                    Original in {getLanguageName(msg.translatedFrom)}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Regular message text */
-                        <p>{msg.text}</p>
-                      )}
+                      <p>{msg.text}</p>
                     </div>
                   )}
 
@@ -107,8 +72,8 @@ function ChatContainer() {
                     }) : "Now"}
                   </p>
 
-                  {/* Translation component for received messages (only when auto-translate is disabled) */}
-                  {msg.senderId !== authUser._id && msg.text && !autoTranslateEnabled && (
+                  {/* Translation component for received messages */}
+                  {msg.senderId !== authUser._id && msg.text && (
                     <MessageTranslation message={msg} />
                   )}
                 </div>

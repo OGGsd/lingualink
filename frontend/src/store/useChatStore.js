@@ -88,58 +88,16 @@ export const useChatStore = create((set, get) => ({
 
   sendMessage: async (messageData) => {
     const { selectedUser } = get();
-    const { autoTranslateEnabled, translateText, detectLanguage } = useTranslationStore.getState();
 
-    console.log("🚀 SIMPLE SEND MESSAGE:", {
+    console.log("🚀 SEND MESSAGE:", {
       hasText: !!messageData.text,
-      hasImage: !!messageData.image,
-      autoTranslateEnabled
+      hasImage: !!messageData.image
     });
 
     try {
-      let finalMessageData = { ...messageData };
+      console.log("📤 Sending to backend:", messageData);
 
-      // 🌍 TRANSLATE BEFORE SENDING (if auto-translate enabled)
-      if (autoTranslateEnabled && messageData.text && messageData.text.trim()) {
-        console.log("🔄 Translating message before sending...");
-
-        // Get recipient's preferred language
-        const recipientSettings = await axiosInstance.get(`/settings/user/${selectedUser._id}`);
-        const recipientLanguage = recipientSettings.data?.settings?.preferredLanguage || 'en';
-
-        // Detect source language
-        const detectedLang = await detectLanguage(messageData.text);
-        const detectedLanguageCode = detectedLang?.language || 'en';
-
-        console.log(`🎯 Translation: ${detectedLanguageCode} → ${recipientLanguage}`);
-
-        // Only translate if languages are different
-        if (detectedLanguageCode !== recipientLanguage) {
-          const translationResult = await translateText(messageData.text, recipientLanguage, detectedLanguageCode);
-
-          if (translationResult && translationResult.translatedText) {
-            console.log(`✅ Translation ready: "${messageData.text}" → "${translationResult.translatedText}"`);
-
-            // Prepare message with translation data
-            finalMessageData = {
-              ...messageData,
-              text: translationResult.translatedText, // Translated text as main text
-              originalText: messageData.text, // Original text preserved
-              translatedFrom: detectedLanguageCode,
-              translatedTo: recipientLanguage
-            };
-          }
-        }
-      }
-
-      // 🚀 SEND TO BACKEND (with translation data if available)
-      console.log("📤 Sending to backend:", {
-        hasOriginalText: !!finalMessageData.originalText,
-        translatedFrom: finalMessageData.translatedFrom,
-        translatedTo: finalMessageData.translatedTo
-      });
-
-      const response = await axiosInstance.post(`/messages/send/${selectedUser._id}`, finalMessageData);
+      const response = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
 
       console.log("✅ Message sent successfully:", response.data);
 
@@ -170,14 +128,6 @@ export const useChatStore = create((set, get) => ({
 
     socket.on("newMessage", (newMessage) => {
       console.log("📨 Received new message:", newMessage);
-      console.log("🔍 Translation data in received message:", {
-        isAutoTranslated: newMessage.isAutoTranslated,
-        hasOriginalText: !!newMessage.originalText,
-        translatedFrom: newMessage.translatedFrom,
-        translatedTo: newMessage.translatedTo,
-        text: newMessage.text?.substring(0, 50) + "...",
-        originalText: newMessage.originalText?.substring(0, 50) + "..."
-      });
 
       // Check if this message is part of the current conversation
       const isMessageForCurrentConversation =
@@ -214,30 +164,7 @@ export const useChatStore = create((set, get) => ({
       }
     });
 
-    // 🔄 TRANSLATION UPDATE: Listen for translation updates
-    socket.on("translationUpdate", (translationUpdate) => {
-      console.log("🔄 Received translation update:", translationUpdate);
 
-      const { messageId, translatedText, originalText, translatedFrom, translatedTo } = translationUpdate;
-
-      // Update the message with translation (receiver sees both original and translated)
-      set(state => ({
-        messages: state.messages.map(msg =>
-          msg._id === messageId
-            ? {
-                ...msg,
-                text: translatedText,
-                originalText: originalText,
-                translatedFrom: translatedFrom,
-                translatedTo: translatedTo,
-                isAutoTranslated: true
-              }
-            : msg
-        )
-      }));
-
-      console.log("✅ Message updated with translation for receiver");
-    });
   },
 
   unsubscribeFromMessages: () => {

@@ -9,7 +9,6 @@ export const useTranslationStore = create((set, get) => ({
   error: null,
   translationHistory: [],
   userPreferredLanguage: "en", // Will be loaded from database
-  autoTranslateEnabled: false, // Will be loaded from database
   soundEnabled: true, // Will be loaded from database
   translationProvider: "openai", // Will be loaded from database
   settingsLoaded: false, // Track if settings have been loaded from database
@@ -26,7 +25,6 @@ export const useTranslationStore = create((set, get) => ({
         const { settings } = response.data;
         set({
           userPreferredLanguage: settings.preferredLanguage || "en",
-          autoTranslateEnabled: settings.autoTranslateEnabled || false,
           soundEnabled: settings.soundEnabled !== undefined ? settings.soundEnabled : true,
           settingsLoaded: true
         });
@@ -50,7 +48,6 @@ export const useTranslationStore = create((set, get) => ({
       // Set defaults if loading fails
       set({
         userPreferredLanguage: "en",
-        autoTranslateEnabled: false,
         soundEnabled: true,
         settingsLoaded: true
       });
@@ -76,10 +73,7 @@ export const useTranslationStore = create((set, get) => ({
               toast.success(`Language preference updated to ${data.preferredLanguage}`);
             }
 
-            if (data.autoTranslateEnabled !== undefined && data.autoTranslateEnabled !== currentState.autoTranslateEnabled) {
-              set({ autoTranslateEnabled: data.autoTranslateEnabled });
-              toast.success(`Auto-translate ${data.autoTranslateEnabled ? 'enabled' : 'disabled'}`);
-            }
+
 
             if (data.soundEnabled !== undefined && data.soundEnabled !== currentState.soundEnabled) {
               set({ soundEnabled: data.soundEnabled });
@@ -278,46 +272,7 @@ export const useTranslationStore = create((set, get) => ({
     }
   },
 
-  setAutoTranslateEnabled: async (enabled) => {
-    try {
-      console.log("🔄 Updating auto-translate to:", enabled);
 
-      // Optimistically update UI
-      set({ autoTranslateEnabled: enabled });
-
-      // Save to database
-      const response = await axiosInstance.put("/settings/translation", {
-        autoTranslateEnabled: enabled
-      });
-
-      if (response.data.success) {
-        console.log("✅ Auto-translate setting updated in database");
-
-        // Emit Socket.io event for real-time sync across devices
-        try {
-          const { useAuthStore } = await import("./useAuthStore");
-          const { socket } = useAuthStore.getState();
-          if (socket?.connected) {
-            socket.emit("settingsChanged", {
-              type: "autoTranslateEnabled",
-              value: enabled
-            });
-          }
-        } catch (error) {
-          console.warn("⚠️ Could not emit Socket.io event:", error);
-        }
-
-        toast.success(`Auto-translate ${enabled ? 'enabled' : 'disabled'}`);
-      } else {
-        throw new Error(response.data.error || "Failed to update auto-translate setting");
-      }
-    } catch (error) {
-      console.error("❌ Error updating auto-translate setting:", error);
-      // Revert optimistic update
-      get().loadUserSettings();
-      toast.error("Failed to update auto-translate setting");
-    }
-  },
 
   // Database-driven sound settings setter with real-time sync
   setSoundEnabled: async (enabled) => {
@@ -481,33 +436,5 @@ export const useTranslationStore = create((set, get) => ({
     return languageCode in supportedLanguages;
   },
 
-  // Auto-translate message if enabled
-  autoTranslateMessage: async (message) => {
-    const { autoTranslateEnabled, userPreferredLanguage, translateText } = get();
-    
-    if (!autoTranslateEnabled || !message.text) {
-      return message;
-    }
 
-    // Don't translate if already in preferred language
-    const detectedLang = await get().detectLanguage(message.text);
-    if (detectedLang && detectedLang.language === userPreferredLanguage) {
-      return message;
-    }
-
-    // Translate the message
-    const translation = await translateText(message.text, userPreferredLanguage);
-    
-    if (translation) {
-      return {
-        ...message,
-        translatedText: translation.translatedText,
-        originalLanguage: translation.sourceLanguage,
-        targetLanguage: translation.targetLanguage,
-        isTranslated: true
-      };
-    }
-
-    return message;
-  }
 }));

@@ -29,7 +29,6 @@ class UserSettings {
       return {
         userId: userId,
         preferredLanguage: 'en',
-        autoTranslateEnabled: false,
         soundEnabled: true,
         openaiApiKey: null,
         createdAt: new Date(),
@@ -48,15 +47,13 @@ class UserSettings {
       INSERT INTO user_settings (
         user_id,
         preferred_language,
-        auto_translate_enabled,
         sound_enabled,
         openai_api_key,
         updated_at
-      ) VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+      ) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
       ON CONFLICT (user_id)
       DO UPDATE SET
         preferred_language = EXCLUDED.preferred_language,
-        auto_translate_enabled = EXCLUDED.auto_translate_enabled,
         sound_enabled = EXCLUDED.sound_enabled,
         openai_api_key = EXCLUDED.openai_api_key,
         updated_at = CURRENT_TIMESTAMP
@@ -67,7 +64,6 @@ class UserSettings {
       const result = await pool.query(query, [
         userId,
         settings.preferredLanguage || 'en',
-        settings.autoTranslateEnabled || false,
         settings.soundEnabled !== undefined ? settings.soundEnabled : true,
         settings.openaiApiKey || null
       ]);
@@ -146,7 +142,6 @@ class UserSettings {
     return {
       userId: row.user_id,
       preferredLanguage: row.preferred_language,
-      autoTranslateEnabled: row.auto_translate_enabled,
       soundEnabled: row.sound_enabled,
       openaiApiKey: row.openai_api_key,
       createdAt: row.created_at,
