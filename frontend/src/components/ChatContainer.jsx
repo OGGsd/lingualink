@@ -61,30 +61,36 @@ function ChatContainer() {
                   {/* Message text with auto-translate support */}
                   {msg.text && (
                     <div className="mt-2">
-                      {/* Show translated text if auto-translate is enabled and message is auto-translated */}
-                      {autoTranslateEnabled && msg.isAutoTranslated && msg.originalText ? (
+                      {/* Show translated text if auto-translate is enabled and message has translation data */}
+                      {autoTranslateEnabled && (msg.isAutoTranslated || msg.originalText) ? (
                         <div className="space-y-2">
                           {/* Translated text (primary) */}
                           <div>
-                            <p className="text-sm">{msg.text}</p>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Globe className="w-3 h-3 opacity-60" />
-                              <span className="text-xs opacity-60">
-                                Translated to {getLanguageName(msg.translatedTo)}
-                              </span>
-                            </div>
+                            <p>{msg.text}</p>
+                            {msg.translatedTo && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Globe className="w-3 h-3 opacity-60" />
+                                <span className="text-xs opacity-60">
+                                  Translated to {getLanguageName(msg.translatedTo)}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Original text (secondary) */}
-                          <div className="border-t border-white/10 pt-2">
-                            <p className="text-xs opacity-75 italic">"{msg.originalText}"</p>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Languages className="w-3 h-3 opacity-50" />
-                              <span className="text-xs opacity-50">
-                                Original in {getLanguageName(msg.translatedFrom)}
-                              </span>
+                          {msg.originalText && (
+                            <div className="border-t border-white/10 pt-2">
+                              <p className="text-xs opacity-75 italic">"{msg.originalText}"</p>
+                              {msg.translatedFrom && (
+                                <div className="flex items-center gap-1 mt-1">
+                                  <Languages className="w-3 h-3 opacity-50" />
+                                  <span className="text-xs opacity-50">
+                                    Original in {getLanguageName(msg.translatedFrom)}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          </div>
+                          )}
                         </div>
                       ) : (
                         /* Regular message text */
