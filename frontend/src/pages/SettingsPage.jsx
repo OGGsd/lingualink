@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useTranslationStore } from "../store/useTranslationStore";
 import { axiosInstance } from "../lib/axios";
-import { User, Lock, Globe, Key, Save, TestTube, Eye, EyeOff, Camera, Upload, Wifi } from "lucide-react";
+import { User, Lock, Globe, Key, Save, TestTube, Eye, EyeOff, Camera, Upload, Wifi, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LanguageSelector from "../components/LanguageSelector";
 import keepAliveService from "../services/keepAliveService";
 import toast from "react-hot-toast";
 
 const SettingsPage = () => {
+  const navigate = useNavigate();
   const { authUser } = useAuthStore();
   const { 
     userPreferredLanguage, 
@@ -197,6 +199,15 @@ const SettingsPage = () => {
   return (
     <div className="min-h-screen bg-slate-900 py-8">
       <div className="max-w-4xl mx-auto px-4">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate("/")}
+          className="mb-6 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-200 group"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+          Back to Chat
+        </button>
+
         <h1 className="text-3xl font-bold text-slate-100 mb-8 flex items-center">
           <User className="w-8 h-8 text-cyan-400 mr-3" />
           Settings
@@ -487,27 +498,6 @@ const SettingsPage = () => {
                 <p>This service prevents the backend from sleeping on Render's free tier by sending a ping every 10 minutes.</p>
                 <p className="text-green-400 mt-2">✅ Service is automatically running in the background</p>
               </div>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  toast.loading("Testing backend connection...", { id: "ping-test" });
-                  try {
-                    const success = await keepAliveService.triggerPing();
-                    if (success) {
-                      toast.success("Backend is alive and responding! 🎉", { id: "ping-test" });
-                    } else {
-                      toast.error("Backend ping failed. Check console for details.", { id: "ping-test" });
-                    }
-                  } catch (error) {
-                    toast.error("Ping test failed: " + error.message, { id: "ping-test" });
-                  }
-                }}
-                className="flex items-center px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-              >
-                <Wifi className="w-4 h-4 mr-2" />
-                Test Backend Connection
-              </button>
             </div>
           </div>
         </div>

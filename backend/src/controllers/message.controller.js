@@ -123,24 +123,25 @@ export const sendMessage = async (req, res) => {
       });
     }
 
+    // 🚀 SOCKET: Send message to both users immediately
     const receiverSocketId = getReceiverSocketId(receiverId);
     const senderSocketId = getReceiverSocketId(senderId);
 
-    console.log("Sending message to receiver:", receiverId, "socketId:", receiverSocketId);
-    console.log("Sending message to sender:", senderId, "socketId:", senderSocketId);
+    console.log("📡 Sending message to receiver:", receiverId, "socketId:", receiverSocketId);
+    console.log("📡 Sending message to sender:", senderId, "socketId:", senderSocketId);
 
     // Send to receiver
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
-      console.log("Message sent to receiver");
+      console.log("✅ Message sent to receiver via socket");
     } else {
-      console.log("Receiver not online");
+      console.log("⚠️ Receiver not online");
     }
 
     // Also send to sender for real-time update (if they're on a different device/tab)
     if (senderSocketId && senderSocketId !== receiverSocketId) {
       io.to(senderSocketId).emit("newMessage", newMessage);
-      console.log("Message sent to sender");
+      console.log("✅ Message sent to sender via socket");
     }
 
     res.status(201).json(newMessage);

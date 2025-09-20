@@ -26,9 +26,6 @@ function ContactList() {
               <div className="size-12 rounded-full">
                 <img src={contact.profilePic || "/avatar.png"} />
               </div>
-              {onlineUsers.includes(String(contact._id)) && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-              )}
             </div>
             <div className="flex flex-col">
               <h4 className="text-slate-200 font-medium">{contact.fullName}</h4>
