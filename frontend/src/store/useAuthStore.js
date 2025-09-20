@@ -84,18 +84,18 @@ export const useAuthStore = create((set, get) => ({
     const { authUser } = get();
     if (!authUser || get().socket?.connected) return;
 
-    console.log("Connecting socket for user:", authUser.fullName);
+
 
     const socket = io(BASE_URL, {
       withCredentials: true, // this ensures cookies are sent with the connection
     });
 
     socket.on("connect", () => {
-      console.log("Socket connected successfully:", socket.id);
+      // Socket connected
     });
 
     socket.on("disconnect", () => {
-      console.log("Socket disconnected");
+      // Socket disconnected
     });
 
     socket.on("connect_error", (error) => {
@@ -109,13 +109,9 @@ export const useAuthStore = create((set, get) => ({
 
     // listen for online users event
     socket.on("getOnlineUsers", (userIds) => {
-      console.log("Received online users:", userIds);
-      console.log("Current user ID type:", typeof authUser._id, "value:", authUser._id);
-
       // Keep IDs as strings for consistent comparison since Object.keys() returns strings
       // and user._id from database might be string or number depending on context
       const stringUserIds = userIds.map(id => String(id));
-      console.log("Processed online user IDs:", stringUserIds);
       set({ onlineUsers: stringUserIds });
     });
 

@@ -18,7 +18,6 @@ export const useTranslationStore = create((set, get) => ({
   // Load user settings from database
   loadUserSettings: async () => {
     try {
-      console.log("🔄 Loading user settings from database...");
       const response = await axiosInstance.get("/settings/translation");
 
       if (response.data.success) {
@@ -28,14 +27,13 @@ export const useTranslationStore = create((set, get) => ({
           soundEnabled: settings.soundEnabled !== undefined ? settings.soundEnabled : true,
           settingsLoaded: true
         });
-        console.log("✅ User settings loaded:", settings);
 
         // Sync sound settings with chat store
         try {
           const { useChatStore } = await import("./useChatStore");
           useChatStore.getState().syncSoundSettings();
         } catch (error) {
-          console.warn("⚠️ Could not sync sound settings with chat store:", error);
+          // Silent error handling
         }
 
         // Initialize Socket.io listeners for real-time updates
@@ -61,11 +59,8 @@ export const useTranslationStore = create((set, get) => ({
       import("./useAuthStore").then(({ useAuthStore }) => {
         const { socket } = useAuthStore.getState();
         if (socket?.connected) {
-          console.log("🔌 Initializing Socket.io listeners for settings...");
-
           // Listen for settings updates from other devices/sessions
           socket.on("settingsUpdated", (data) => {
-            console.log("🔄 Settings updated from server:", data);
             const currentState = get();
 
             if (data.preferredLanguage !== undefined && data.preferredLanguage !== currentState.userPreferredLanguage) {
@@ -84,10 +79,8 @@ export const useTranslationStore = create((set, get) => ({
               toast.success(`Sound notifications ${data.soundEnabled ? 'enabled' : 'disabled'}`);
             }
           });
-
-          console.log("✅ Socket.io listeners initialized");
         } else {
-          console.warn("⚠️ Socket not connected, will retry later");
+          // Socket not connected, will retry later
         }
       });
     } catch (error) {
@@ -233,8 +226,6 @@ export const useTranslationStore = create((set, get) => ({
   // Database-driven setters with real-time sync
   setUserPreferredLanguage: async (language) => {
     try {
-      console.log("🔄 Updating preferred language to:", language);
-
       // Optimistically update UI
       set({ userPreferredLanguage: language });
 
@@ -244,7 +235,6 @@ export const useTranslationStore = create((set, get) => ({
       });
 
       if (response.data.success) {
-        console.log("✅ Preferred language updated in database");
 
         // Emit Socket.io event for real-time sync across devices
         try {
@@ -277,8 +267,6 @@ export const useTranslationStore = create((set, get) => ({
   // Database-driven sound settings setter with real-time sync
   setSoundEnabled: async (enabled) => {
     try {
-      console.log("🔄 Updating sound setting to:", enabled);
-
       // Optimistically update UI
       set({ soundEnabled: enabled });
 
@@ -287,7 +275,7 @@ export const useTranslationStore = create((set, get) => ({
         const { useChatStore } = await import("./useChatStore");
         useChatStore.getState().set({ isSoundEnabled: enabled });
       } catch (error) {
-        console.warn("⚠️ Could not update chat store:", error);
+        // Silent error handling
       }
 
       // Save to database
@@ -296,7 +284,6 @@ export const useTranslationStore = create((set, get) => ({
       });
 
       if (response.data.success) {
-        console.log("✅ Sound setting updated in database");
 
         // Emit Socket.io event for real-time sync across devices
         try {
@@ -338,7 +325,7 @@ export const useTranslationStore = create((set, get) => ({
   // Fetch translation history from database
   fetchTranslationHistory: async (limit = 50, offset = 0) => {
     try {
-      console.log("📚 Fetching translation history from database...");
+
       const response = await axiosInstance.get(`/translation/history?limit=${limit}&offset=${offset}`);
 
       if (response.data.success) {
@@ -346,7 +333,7 @@ export const useTranslationStore = create((set, get) => ({
         set(state => ({
           translationHistory: offset === 0 ? history : [...state.translationHistory, ...history]
         }));
-        console.log("✅ Translation history loaded:", history.length, "entries");
+
         return { history, pagination };
       } else {
         throw new Error(response.data.error || "Failed to fetch translation history");
@@ -361,11 +348,11 @@ export const useTranslationStore = create((set, get) => ({
   // Fetch translation statistics from database
   fetchTranslationStats: async () => {
     try {
-      console.log("📊 Fetching translation stats from database...");
+
       const response = await axiosInstance.get("/translation/stats");
 
       if (response.data.success) {
-        console.log("✅ Translation stats loaded:", response.data.stats);
+
         return response.data.stats;
       } else {
         throw new Error(response.data.error || "Failed to fetch translation stats");
@@ -380,7 +367,7 @@ export const useTranslationStore = create((set, get) => ({
   // Translate a specific message by ID (manual translation)
   translateMessageById: async (messageId, targetLanguage, sourceLanguage = 'auto') => {
     try {
-      console.log(`🌍 Translating message ${messageId} to ${targetLanguage}...`);
+
       set({ isLoading: true, error: null });
 
       const response = await axiosInstance.post(`/translation/message/${messageId}`, {

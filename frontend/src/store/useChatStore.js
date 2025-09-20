@@ -119,8 +119,7 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     const { authUser } = useAuthStore.getState();
 
-    console.log("Subscribing to messages for user:", selectedUser.fullName);
-    console.log("Socket connected:", socket?.connected);
+
 
     // Remove any existing listeners to prevent duplicates
     socket.off("newMessage");
@@ -142,7 +141,6 @@ export const useChatStore = create((set, get) => ({
 
       // Skip messages sent by current user (they already have them via optimistic updates)
       if (newMessage.senderId === authUser._id) {
-        console.log("Skipping own message received via socket");
         return;
       }
 

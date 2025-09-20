@@ -2,8 +2,7 @@ import { useRef, useState } from "react";
 import useKeyboardSound from "../hooks/useKeyboardSound";
 import { useChatStore } from "../store/useChatStore";
 import toast from "react-hot-toast";
-import { ImageIcon, SendIcon, XIcon, Zap } from "lucide-react";
-import { useTranslationStore } from "../store/useTranslationStore";
+import { ImageIcon, SendIcon, XIcon } from "lucide-react";
 
 function MessageInput() {
   const { playRandomKeyStrokeSound } = useKeyboardSound();
@@ -13,7 +12,6 @@ function MessageInput() {
   const fileInputRef = useRef(null);
 
   const { sendMessage, isSoundEnabled, selectedUser } = useChatStore();
-  const { autoTranslateEnabled } = useTranslationStore();
 
   const handleSendMessage = (e) => {
     e.preventDefault();
@@ -59,11 +57,8 @@ function MessageInput() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Get dynamic placeholder based on auto-translate status
+  // Simple placeholder
   const getPlaceholder = () => {
-    if (autoTranslateEnabled && selectedUser) {
-      return `Type in any language... (auto-translates for ${selectedUser.fullName})`;
-    }
     return "Type a message...";
   };
 
@@ -122,22 +117,7 @@ function MessageInput() {
           <ImageIcon className="w-5 h-5" />
         </button>
 
-        {/* Auto-translate toggle button */}
-        <button
-          type="button"
-          onClick={() => {
-            const { setAutoTranslateEnabled } = useTranslationStore.getState();
-            setAutoTranslateEnabled(!autoTranslateEnabled);
-          }}
-          className={`px-3 py-2 rounded-lg transition-all ${
-            autoTranslateEnabled
-              ? 'bg-cyan-500 text-white hover:bg-cyan-600'
-              : 'bg-slate-800/50 text-slate-400 hover:text-slate-200'
-          }`}
-          title={autoTranslateEnabled ? 'Auto-translate enabled' : 'Auto-translate disabled'}
-        >
-          <Zap className="w-5 h-5" />
-        </button>
+
         <button
           type="submit"
           disabled={!text.trim() && !imagePreview}
