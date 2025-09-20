@@ -44,7 +44,7 @@ function ChatContainer() {
           <div className="max-w-3xl mx-auto space-y-6">
             {messages.map((msg, index) => (
               <div
-                key={msg._id || `temp-${msg.tempId || index}`}
+                key={`${msg._id || msg.tempId || `msg-${index}`}-${msg.createdAt || Date.now()}`}
                 className={`chat ${msg.senderId === authUser._id ? "chat-end" : "chat-start"}`}
               >
                 <div

@@ -187,7 +187,7 @@ export const useChatStore = create((set, get) => ({
         // Replace the optimistic message with the real one from the server
         set(state => ({
           messages: state.messages.map(msg =>
-            msg._id === tempId ? { ...res.data } : msg
+            msg._id === tempId ? { ...res.data, fromSender: true } : msg
           )
         }));
 
@@ -234,7 +234,9 @@ export const useChatStore = create((set, get) => ({
       const currentMessages = get().messages;
 
       // Check if message already exists (to prevent duplicates)
-      const messageExists = currentMessages.some(msg => msg._id === newMessage._id);
+      const messageExists = currentMessages.some(msg =>
+        msg._id === newMessage._id || (msg._id === newMessage._id && msg.fromSender)
+      );
       if (messageExists) {
         console.log("Message already exists, skipping");
         return;
