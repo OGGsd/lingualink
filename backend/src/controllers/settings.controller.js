@@ -186,6 +186,7 @@ export const getTranslationSettings = async (req, res) => {
       settings: {
         preferredLanguage: settings.preferredLanguage,
         autoTranslateEnabled: settings.autoTranslateEnabled,
+        soundEnabled: settings.soundEnabled,
         hasCustomApiKey: !!settings.openaiApiKey
       },
       supportedLanguages: SUPPORTED_LANGUAGES

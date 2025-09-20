@@ -87,49 +87,31 @@ export const useChatStore = create((set, get) => ({
   },
 
   sendMessage: async (messageData) => {
-    const { selectedUser, messages } = get();
-    const { authUser } = useAuthStore.getState();
+    const { selectedUser } = get();
     const { autoTranslateEnabled, translateText, detectLanguage } = useTranslationStore.getState();
 
-    console.log("Frontend sendMessage called with:", {
+    console.log("🚀 SIMPLE SEND MESSAGE:", {
       hasText: !!messageData.text,
       hasImage: !!messageData.image,
-      imageLength: messageData.image ? messageData.image.length : 0,
-      selectedUserId: selectedUser._id,
       autoTranslateEnabled
     });
 
-    // ⚡ LIGHTNING FAST: Send original message immediately to both users
-    const tempId = `temp-${Date.now()}`;
+    try {
+      let finalMessageData = { ...messageData };
 
-    // 🚀 IMMEDIATE: Show original message to sender
-    const optimisticMessage = {
-      _id: tempId,
-      senderId: authUser._id,
-      receiverId: selectedUser._id,
-      text: messageData.text, // Always show original text first
-      image: messageData.image,
-      createdAt: new Date().toISOString(),
-      isOptimistic: true,
-    };
+      // 🌍 TRANSLATE BEFORE SENDING (if auto-translate enabled)
+      if (autoTranslateEnabled && messageData.text && messageData.text.trim()) {
+        console.log("🔄 Translating message before sending...");
 
-    // Immediately update sender's UI with original message
-    set({ messages: [...messages, optimisticMessage] });
-
-    // 🚀 IMMEDIATE: Send original message to backend (so receiver gets it instantly)
-    const realMessage = await sendToBackend(messageData, tempId);
-
-    // 🌍 BACKGROUND: Auto-translate if enabled (this won't block the UI or receiver)
-    if (autoTranslateEnabled && messageData.text && messageData.text.trim()) {
-      // Start translation in background - completely non-blocking
-      Promise.all([
-        axiosInstance.get(`/settings/user/${selectedUser._id}`),
-        detectLanguage(messageData.text)
-      ]).then(async ([recipientSettings, detectedLang]) => {
+        // Get recipient's preferred language
+        const recipientSettings = await axiosInstance.get(`/settings/user/${selectedUser._id}`);
         const recipientLanguage = recipientSettings.data?.settings?.preferredLanguage || 'en';
+
+        // Detect source language
+        const detectedLang = await detectLanguage(messageData.text);
         const detectedLanguageCode = detectedLang?.language || 'en';
 
-        console.log(`🎯 Background auto-translate: ${detectedLanguageCode} → ${recipientLanguage}`);
+        console.log(`🎯 Translation: ${detectedLanguageCode} → ${recipientLanguage}`);
 
         // Only translate if languages are different
         if (detectedLanguageCode !== recipientLanguage) {
@@ -138,83 +120,37 @@ export const useChatStore = create((set, get) => ({
           if (translationResult && translationResult.translatedText) {
             console.log(`✅ Translation ready: "${messageData.text}" → "${translationResult.translatedText}"`);
 
-            // Update sender's UI with translated text (keep original text visible)
-            // Use real message ID if available, otherwise use temp ID
-            const messageIdToUpdate = realMessage?._id || tempId;
-            set(state => ({
-              messages: state.messages.map(msg =>
-                msg._id === messageIdToUpdate
-                  ? {
-                      ...msg,
-                      text: translationResult.translatedText,
-                      originalText: messageData.text,
-                      translatedFrom: detectedLanguageCode,
-                      translatedTo: recipientLanguage,
-                      isAutoTranslated: true
-                    }
-                  : msg
-              )
-            }));
-
-            // 📡 SOCKET UPDATE: Send translation update to receiver using real message ID
-            if (realMessage?._id) {
-              try {
-                await axiosInstance.post(`/messages/update-translation/${realMessage._id}`, {
-                  translatedText: translationResult.translatedText,
-                  originalText: messageData.text,
-                  translatedFrom: detectedLanguageCode,
-                  translatedTo: recipientLanguage
-                });
-                console.log("🔄 Translation update sent to receiver via socket");
-              } catch (error) {
-                console.error("❌ Failed to send translation update:", error);
-              }
-            } else {
-              console.log("⚠️ No real message available for translation update");
-            }
+            // Prepare message with translation data
+            finalMessageData = {
+              ...messageData,
+              text: translationResult.translatedText, // Translated text as main text
+              originalText: messageData.text, // Original text preserved
+              translatedFrom: detectedLanguageCode,
+              translatedTo: recipientLanguage
+            };
           }
         }
-      }).catch(error => {
-        console.error("❌ Background auto-translation failed:", error);
-        // This won't affect the user experience since original message was already sent
-      });
-    }
-
-    async function sendToBackend(data, tempId) {
-      try {
-        console.log("🚀 Sending message to backend...");
-        const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, data);
-        console.log("✅ Backend response:", res.data);
-
-        // Replace the optimistic message with the real one from the server
-        // Preserve any translation data that might have been added to the optimistic message
-        set(state => ({
-          messages: state.messages.map(msg =>
-            msg._id === tempId ? {
-              ...res.data,
-              fromSender: true,
-              // Preserve translation data if it exists
-              ...(msg.isAutoTranslated && {
-                originalText: msg.originalText,
-                translatedFrom: msg.translatedFrom,
-                translatedTo: msg.translatedTo,
-                isAutoTranslated: msg.isAutoTranslated
-              })
-            } : msg
-          )
-        }));
-
-        // Return the real message for translation updates
-        return res.data;
-      } catch (error) {
-        console.error("❌ Error sending message:", error.response?.data || error.message);
-        // Remove optimistic message on failure
-        set(state => ({
-          messages: state.messages.filter(msg => msg._id !== tempId)
-        }));
-        toast.error(error.response?.data?.message || "Failed to send message");
-        return null;
       }
+
+      // 🚀 SEND TO BACKEND (with translation data if available)
+      console.log("📤 Sending to backend:", {
+        hasOriginalText: !!finalMessageData.originalText,
+        translatedFrom: finalMessageData.translatedFrom,
+        translatedTo: finalMessageData.translatedTo
+      });
+
+      const response = await axiosInstance.post(`/messages/send/${selectedUser._id}`, finalMessageData);
+
+      console.log("✅ Message sent successfully:", response.data);
+
+      // 🔄 UPDATE LOCAL MESSAGES (the socket will handle receiver updates)
+      set(state => ({
+        messages: [...state.messages, response.data]
+      }));
+
+    } catch (error) {
+      console.error("❌ Error sending message:", error);
+      toast.error("Failed to send message");
     }
   },
 

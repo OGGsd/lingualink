@@ -6,14 +6,15 @@ class UserSettings {
    */
   static async getByUserId(userId) {
     const query = `
-      SELECT 
+      SELECT
         user_id,
         preferred_language,
         auto_translate_enabled,
+        sound_enabled,
         openai_api_key,
         created_at,
         updated_at
-      FROM user_settings 
+      FROM user_settings
       WHERE user_id = $1
     `;
 
@@ -29,6 +30,7 @@ class UserSettings {
         userId: userId,
         preferredLanguage: 'en',
         autoTranslateEnabled: false,
+        soundEnabled: true,
         openaiApiKey: null,
         createdAt: new Date(),
         updatedAt: new Date()
