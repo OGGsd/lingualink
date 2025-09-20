@@ -138,7 +138,7 @@ export const useChatStore = create((set, get) => ({
           if (translationResult && translationResult.translatedText) {
             console.log(`✅ Translation ready: "${messageData.text}" → "${translationResult.translatedText}"`);
 
-            // Update sender's UI with translated text
+            // Update sender's UI with translated text (keep original text visible)
             set(state => ({
               messages: state.messages.map(msg =>
                 msg._id === tempId
@@ -187,7 +187,7 @@ export const useChatStore = create((set, get) => ({
         // Replace the optimistic message with the real one from the server
         set(state => ({
           messages: state.messages.map(msg =>
-            msg._id === tempId ? res.data : msg
+            msg._id === tempId ? { ...res.data } : msg
           )
         }));
 
@@ -257,7 +257,7 @@ export const useChatStore = create((set, get) => ({
 
       const { messageId, translatedText, originalText, translatedFrom, translatedTo } = translationUpdate;
 
-      // Update the message with translation
+      // Update the message with translation (receiver sees both original and translated)
       set(state => ({
         messages: state.messages.map(msg =>
           msg._id === messageId

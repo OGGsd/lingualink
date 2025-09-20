@@ -87,6 +87,23 @@ class Message {
     }
   }
 
+  // Find a message by ID
+  static async findById(messageId) {
+    const query = `
+      SELECT id, sender_id, receiver_id, text, original_text, translated_from,
+             translated_to, is_auto_translated, image_name, image_type, created_at, updated_at
+      FROM messages
+      WHERE id = $1
+    `;
+
+    try {
+      const result = await pool.query(query, [messageId]);
+      return result.rows.length > 0 ? this.formatMessage(result.rows[0]) : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Format message object to match frontend expectations with translation data
   static formatMessage(message) {
     if (!message) return null;
