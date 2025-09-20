@@ -115,15 +115,19 @@ export const useChatStore = create((set, get) => ({
         const detectedLang = await detectLanguage(messageData.text);
         console.log(`🔍 Detected sender language: ${detectedLang}`);
 
+        // Extract language code from detection result
+        const detectedLanguageCode = detectedLang?.language || detectedLang;
+        console.log("🔍 Detected language code:", detectedLanguageCode);
+
         // Only translate if languages are different
-        if (detectedLang !== recipientLanguage) {
-          console.log(`🌍 Translating from ${detectedLang} to ${recipientLanguage}...`);
-          const translationResult = await translateText(messageData.text, recipientLanguage, detectedLang);
+        if (detectedLanguageCode !== recipientLanguage) {
+          console.log(`🌍 Translating from ${detectedLanguageCode} to ${recipientLanguage}...`);
+          const translationResult = await translateText(messageData.text, recipientLanguage, detectedLanguageCode);
 
           if (translationResult && translationResult.translatedText) {
             finalMessageData.text = translationResult.translatedText;
             finalMessageData.originalText = messageData.text;
-            finalMessageData.translatedFrom = detectedLang;
+            finalMessageData.translatedFrom = detectedLanguageCode; // Store only the language code
             finalMessageData.translatedTo = recipientLanguage;
             console.log(`✅ Message auto-translated: "${messageData.text}" → "${translationResult.translatedText}"`);
           }

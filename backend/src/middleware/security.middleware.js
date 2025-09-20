@@ -10,12 +10,18 @@ export const generalRateLimit = rateLimit({
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  skip: (req) => {
-    // Skip rate limiting in development or when dev rate limits are allowed
-    if (ENV.NODE_ENV === 'development' || ENV.ALLOW_DEV_RATE_LIMITS === 'true') {
-      return true; // Skip all rate limiting for development
+  // Configure for proxy environments (Render, Heroku, etc.)
+  trustProxy: ENV.NODE_ENV === 'production',
+  keyGenerator: (req) => {
+    // In production with proxy, use X-Forwarded-For header
+    if (ENV.NODE_ENV === 'production') {
+      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     }
-    return false;
+    return req.ip;
+  },
+  skip: () => {
+    // Skip rate limiting in development or when dev rate limits are allowed
+    return ENV.NODE_ENV === 'development' || ENV.ALLOW_DEV_RATE_LIMITS === 'true';
   },
 });
 
@@ -28,12 +34,18 @@ export const authRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting in development or when dev rate limits are allowed
-    if (ENV.NODE_ENV === 'development' || ENV.ALLOW_DEV_RATE_LIMITS === 'true') {
-      return true; // Skip all rate limiting for development
+  // Configure for proxy environments (Render, Heroku, etc.)
+  trustProxy: ENV.NODE_ENV === 'production',
+  keyGenerator: (req) => {
+    // In production with proxy, use X-Forwarded-For header
+    if (ENV.NODE_ENV === 'production') {
+      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     }
-    return false;
+    return req.ip;
+  },
+  skip: () => {
+    // Skip rate limiting in development or when dev rate limits are allowed
+    return ENV.NODE_ENV === 'development' || ENV.ALLOW_DEV_RATE_LIMITS === 'true';
   },
 });
 
@@ -46,13 +58,18 @@ export const messageRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting in development for localhost and common dev IPs
-    if (ENV.NODE_ENV === 'development') {
-      const devIPs = ['127.0.0.1', '::1', 'localhost', '::ffff:127.0.0.1'];
-      return devIPs.includes(req.ip) || req.ip.includes('127.0.0.1') || req.ip.includes('::1');
+  // Configure for proxy environments (Render, Heroku, etc.)
+  trustProxy: ENV.NODE_ENV === 'production',
+  keyGenerator: (req) => {
+    // In production with proxy, use X-Forwarded-For header
+    if (ENV.NODE_ENV === 'production') {
+      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     }
-    return false;
+    return req.ip;
+  },
+  skip: () => {
+    // Skip rate limiting in development
+    return ENV.NODE_ENV === 'development';
   },
 });
 
@@ -65,12 +82,17 @@ export const uploadRateLimit = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    // Skip rate limiting in development for localhost and common dev IPs
-    if (ENV.NODE_ENV === 'development') {
-      const devIPs = ['127.0.0.1', '::1', 'localhost', '::ffff:127.0.0.1'];
-      return devIPs.includes(req.ip) || req.ip.includes('127.0.0.1') || req.ip.includes('::1');
+  // Configure for proxy environments (Render, Heroku, etc.)
+  trustProxy: ENV.NODE_ENV === 'production',
+  keyGenerator: (req) => {
+    // In production with proxy, use X-Forwarded-For header
+    if (ENV.NODE_ENV === 'production') {
+      return req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || req.ip;
     }
-    return false;
+    return req.ip;
+  },
+  skip: () => {
+    // Skip rate limiting in development
+    return ENV.NODE_ENV === 'development';
   },
 });
