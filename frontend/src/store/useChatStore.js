@@ -233,7 +233,15 @@ export const useChatStore = create((set, get) => ({
     socket.off("translationUpdate");
 
     socket.on("newMessage", (newMessage) => {
-      console.log("Received new message:", newMessage);
+      console.log("📨 Received new message:", newMessage);
+      console.log("🔍 Translation data in received message:", {
+        isAutoTranslated: newMessage.isAutoTranslated,
+        hasOriginalText: !!newMessage.originalText,
+        translatedFrom: newMessage.translatedFrom,
+        translatedTo: newMessage.translatedTo,
+        text: newMessage.text?.substring(0, 50) + "...",
+        originalText: newMessage.originalText?.substring(0, 50) + "..."
+      });
 
       // Check if this message is part of the current conversation
       const isMessageForCurrentConversation =

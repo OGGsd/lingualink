@@ -61,6 +61,17 @@ function ChatContainer() {
                   {/* Message text with auto-translate support */}
                   {msg.text && (
                     <div className="mt-2">
+                      {/* Debug logging */}
+                      {console.log("🔍 Message display debug:", {
+                        messageId: msg._id,
+                        autoTranslateEnabled,
+                        isAutoTranslated: msg.isAutoTranslated,
+                        hasOriginalText: !!msg.originalText,
+                        translatedFrom: msg.translatedFrom,
+                        translatedTo: msg.translatedTo,
+                        text: msg.text?.substring(0, 50) + "...",
+                        originalText: msg.originalText?.substring(0, 50) + "..."
+                      })}
                       {/* Show translated text if auto-translate is enabled and message has translation data */}
                       {autoTranslateEnabled && (msg.isAutoTranslated || msg.originalText) ? (
                         <div className="space-y-2">
