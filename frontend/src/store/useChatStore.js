@@ -99,27 +99,29 @@ export const useChatStore = create((set, get) => ({
       autoTranslateEnabled
     });
 
-    // ⚡ FAST FLOW: Show message immediately, translate in background
+    // ⚡ LIGHTNING FAST: Send original message immediately to both users
     const tempId = `temp-${Date.now()}`;
 
-    // 🚀 IMMEDIATE: Show original message to user first
+    // 🚀 IMMEDIATE: Show original message to sender
     const optimisticMessage = {
       _id: tempId,
       senderId: authUser._id,
       receiverId: selectedUser._id,
-      text: messageData.text, // Show original text first
+      text: messageData.text, // Always show original text first
       image: messageData.image,
       createdAt: new Date().toISOString(),
       isOptimistic: true,
     };
 
-    // Immediately update UI with original message
+    // Immediately update sender's UI with original message
     set({ messages: [...messages, optimisticMessage] });
 
-    // 🌍 BACKGROUND: Auto-translate if enabled
-    let finalMessageData = { ...messageData };
+    // 🚀 IMMEDIATE: Send original message to backend (so receiver gets it instantly)
+    const realMessage = await sendToBackend(messageData, tempId);
+
+    // 🌍 BACKGROUND: Auto-translate if enabled (this won't block the UI or receiver)
     if (autoTranslateEnabled && messageData.text && messageData.text.trim()) {
-      // Start translation in background - don't block UI
+      // Start translation in background - completely non-blocking
       Promise.all([
         axiosInstance.get(`/settings/user/${selectedUser._id}`),
         detectLanguage(messageData.text)
@@ -127,41 +129,53 @@ export const useChatStore = create((set, get) => ({
         const recipientLanguage = recipientSettings.data?.settings?.preferredLanguage || 'en';
         const detectedLanguageCode = detectedLang?.language || 'en';
 
-        console.log(`🎯 Auto-translate: ${detectedLanguageCode} → ${recipientLanguage}`);
+        console.log(`🎯 Background auto-translate: ${detectedLanguageCode} → ${recipientLanguage}`);
 
         // Only translate if languages are different
         if (detectedLanguageCode !== recipientLanguage) {
           const translationResult = await translateText(messageData.text, recipientLanguage, detectedLanguageCode);
 
           if (translationResult && translationResult.translatedText) {
-            finalMessageData.text = translationResult.translatedText;
-            finalMessageData.originalText = messageData.text;
-            finalMessageData.translatedFrom = detectedLanguageCode;
-            finalMessageData.translatedTo = recipientLanguage;
+            console.log(`✅ Translation ready: "${messageData.text}" → "${translationResult.translatedText}"`);
 
-            console.log(`✅ Auto-translated: "${messageData.text}" → "${translationResult.translatedText}"`);
-
-            // Update the optimistic message with translated text
+            // Update sender's UI with translated text
             set(state => ({
               messages: state.messages.map(msg =>
                 msg._id === tempId
-                  ? { ...msg, text: translationResult.translatedText, originalText: messageData.text }
+                  ? {
+                      ...msg,
+                      text: translationResult.translatedText,
+                      originalText: messageData.text,
+                      translatedFrom: detectedLanguageCode,
+                      translatedTo: recipientLanguage,
+                      isAutoTranslated: true
+                    }
                   : msg
               )
             }));
+
+            // 📡 SOCKET UPDATE: Send translation update to receiver using real message ID
+            if (realMessage?._id) {
+              try {
+                await axiosInstance.post(`/messages/update-translation/${realMessage._id}`, {
+                  translatedText: translationResult.translatedText,
+                  originalText: messageData.text,
+                  translatedFrom: detectedLanguageCode,
+                  translatedTo: recipientLanguage
+                });
+                console.log("🔄 Translation update sent to receiver via socket");
+              } catch (error) {
+                console.error("❌ Failed to send translation update:", error);
+              }
+            } else {
+              console.log("⚠️ No real message available for translation update");
+            }
           }
         }
-
-        // Send the final message to backend (with or without translation)
-        await sendToBackend(finalMessageData, tempId);
       }).catch(error => {
-        console.error("❌ Auto-translation failed:", error);
-        // Send original message if translation fails
-        sendToBackend(messageData, tempId);
+        console.error("❌ Background auto-translation failed:", error);
+        // This won't affect the user experience since original message was already sent
       });
-    } else {
-      // No auto-translate, send immediately
-      await sendToBackend(finalMessageData, tempId);
     }
 
     async function sendToBackend(data, tempId) {
@@ -176,6 +190,9 @@ export const useChatStore = create((set, get) => ({
             msg._id === tempId ? res.data : msg
           )
         }));
+
+        // Return the real message for translation updates
+        return res.data;
       } catch (error) {
         console.error("❌ Error sending message:", error.response?.data || error.message);
         // Remove optimistic message on failure
@@ -183,6 +200,7 @@ export const useChatStore = create((set, get) => ({
           messages: state.messages.filter(msg => msg._id !== tempId)
         }));
         toast.error(error.response?.data?.message || "Failed to send message");
+        return null;
       }
     }
   },
@@ -199,6 +217,7 @@ export const useChatStore = create((set, get) => ({
 
     // Remove any existing listeners to prevent duplicates
     socket.off("newMessage");
+    socket.off("translationUpdate");
 
     socket.on("newMessage", (newMessage) => {
       console.log("Received new message:", newMessage);
@@ -231,11 +250,37 @@ export const useChatStore = create((set, get) => ({
         notificationSound.play().catch((e) => console.log("Audio play failed:", e));
       }
     });
+
+    // 🔄 TRANSLATION UPDATE: Listen for translation updates
+    socket.on("translationUpdate", (translationUpdate) => {
+      console.log("🔄 Received translation update:", translationUpdate);
+
+      const { messageId, translatedText, originalText, translatedFrom, translatedTo } = translationUpdate;
+
+      // Update the message with translation
+      set(state => ({
+        messages: state.messages.map(msg =>
+          msg._id === messageId
+            ? {
+                ...msg,
+                text: translatedText,
+                originalText: originalText,
+                translatedFrom: translatedFrom,
+                translatedTo: translatedTo,
+                isAutoTranslated: true
+              }
+            : msg
+        )
+      }));
+
+      console.log("✅ Message updated with translation for receiver");
+    });
   },
 
   unsubscribeFromMessages: () => {
     const socket = useAuthStore.getState().socket;
     console.log("Unsubscribing from messages");
     socket.off("newMessage");
+    socket.off("translationUpdate");
   },
 }));

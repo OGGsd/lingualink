@@ -5,6 +5,7 @@ import {
   getMessagesByUserId,
   sendMessage,
   getMessageImage,
+  updateTranslation,
 } from "../controllers/message.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import { messageRateLimit, uploadRateLimit } from "../middleware/security.middleware.js";
@@ -26,5 +27,8 @@ router.get("/:id", validateGetMessages, getMessagesByUserId);
 
 // Apply specific rate limiting for message sending
 router.post("/send/:id", messageRateLimit, uploadRateLimit, validateMessage, sendMessage);
+
+// Translation update endpoint (no rate limiting needed as it's background)
+router.post("/update-translation/:messageId", updateTranslation);
 
 export default router;

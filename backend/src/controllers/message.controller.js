@@ -195,3 +195,56 @@ export const getMessageImage = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// 🔄 UPDATE TRANSLATION: Send translation update to receiver via socket
+export const updateTranslation = async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const { translatedText, originalText, translatedFrom, translatedTo } = req.body;
+    const senderId = req.user._id;
+
+    console.log(`🔄 Translation update for message ${messageId}:`, {
+      translatedText,
+      originalText,
+      translatedFrom,
+      translatedTo
+    });
+
+    // Find the message to get receiver info
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+
+    // Verify sender owns this message
+    if (message.senderId.toString() !== senderId.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    const receiverId = message.receiverId;
+
+    // 📡 SOCKET: Send translation update to receiver
+    const receiverSocketId = getReceiverSocketId(receiverId);
+
+    if (receiverSocketId) {
+      const translationUpdate = {
+        messageId,
+        translatedText,
+        originalText,
+        translatedFrom,
+        translatedTo,
+        isAutoTranslated: true
+      };
+
+      io.to(receiverSocketId).emit("translationUpdate", translationUpdate);
+      console.log("✅ Translation update sent to receiver via socket");
+    } else {
+      console.log("⚠️ Receiver not online for translation update");
+    }
+
+    res.status(200).json({ success: true, message: "Translation update sent" });
+  } catch (error) {
+    console.error("❌ Error updating translation:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
