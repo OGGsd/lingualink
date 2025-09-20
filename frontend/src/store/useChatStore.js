@@ -254,12 +254,16 @@ export const useChatStore = create((set, get) => ({
 
       const currentMessages = get().messages;
 
+      // Skip messages sent by current user (they already have them via optimistic updates)
+      if (newMessage.senderId === authUser._id) {
+        console.log("Skipping own message received via socket");
+        return;
+      }
+
       // Check if message already exists (to prevent duplicates)
-      const messageExists = currentMessages.some(msg =>
-        msg._id === newMessage._id || (msg._id === newMessage._id && msg.fromSender)
-      );
+      const messageExists = currentMessages.some(msg => msg._id === newMessage._id);
       if (messageExists) {
-        console.log("Message already exists, skipping");
+        console.log("Message already exists, skipping duplicate");
         return;
       }
 
