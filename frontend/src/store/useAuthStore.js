@@ -110,9 +110,13 @@ export const useAuthStore = create((set, get) => ({
     // listen for online users event
     socket.on("getOnlineUsers", (userIds) => {
       console.log("Received online users:", userIds);
-      // Convert string IDs to numbers for consistent comparison
-      const numericUserIds = userIds.map(id => parseInt(id));
-      set({ onlineUsers: numericUserIds });
+      console.log("Current user ID type:", typeof authUser._id, "value:", authUser._id);
+
+      // Keep IDs as strings for consistent comparison since Object.keys() returns strings
+      // and user._id from database might be string or number depending on context
+      const stringUserIds = userIds.map(id => String(id));
+      console.log("Processed online user IDs:", stringUserIds);
+      set({ onlineUsers: stringUserIds });
     });
 
     // Listen for real-time profile updates
