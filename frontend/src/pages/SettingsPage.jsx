@@ -201,7 +201,10 @@ const SettingsPage = () => {
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
         <button
-          onClick={() => navigate("/")}
+          onClick={() => {
+            console.log("Back to Chat button clicked");
+            navigate("/");
+          }}
           className="mb-6 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-200 group"
         >
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
