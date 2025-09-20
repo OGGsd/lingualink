@@ -89,6 +89,7 @@ export const sendMessage = async (req, res) => {
       isAutoTranslated
     });
 
+    // ⚡ FAST FLOW: Create message in database (this is fast)
     const newMessage = await Message.create({
       senderId,
       receiverId,
@@ -102,24 +103,24 @@ export const sendMessage = async (req, res) => {
       imageType,
     });
 
-    // Create translation history entry if message was translated
+    // 🚀 ASYNC BACKGROUND: Create translation history entry (fire and forget)
     if (isAutoTranslated && originalText && translatedFrom && translatedTo) {
-      try {
-        await TranslationHistory.create({
-          userId: senderId,
-          messageId: newMessage.id,
-          originalText: originalText,
-          translatedText: sanitizedText,
-          sourceLanguage: translatedFrom,
-          targetLanguage: translatedTo,
-          translationType: 'auto',
-          apiProvider: 'openai'
-        });
-        console.log("✅ Translation history entry created");
-      } catch (historyError) {
-        console.error("❌ Failed to create translation history:", historyError);
-        // Don't fail the message sending if history creation fails
-      }
+      // Don't await this - let it run in background
+      TranslationHistory.create({
+        userId: senderId,
+        messageId: newMessage.id,
+        originalText: originalText,
+        translatedText: sanitizedText,
+        sourceLanguage: translatedFrom,
+        targetLanguage: translatedTo,
+        translationType: 'auto',
+        apiProvider: 'openai'
+      }).then(() => {
+        console.log("✅ Translation history entry created (background)");
+      }).catch((historyError) => {
+        console.error("❌ Failed to create translation history (background):", historyError);
+        // This won't affect the user experience
+      });
     }
 
     const receiverSocketId = getReceiverSocketId(receiverId);

@@ -99,78 +99,91 @@ export const useChatStore = create((set, get) => ({
       autoTranslateEnabled
     });
 
-    // Auto-translate message if enabled and there's text
+    // ⚡ FAST FLOW: Show message immediately, translate in background
+    const tempId = `temp-${Date.now()}`;
+
+    // 🚀 IMMEDIATE: Show original message to user first
+    const optimisticMessage = {
+      _id: tempId,
+      senderId: authUser._id,
+      receiverId: selectedUser._id,
+      text: messageData.text, // Show original text first
+      image: messageData.image,
+      createdAt: new Date().toISOString(),
+      isOptimistic: true,
+    };
+
+    // Immediately update UI with original message
+    set({ messages: [...messages, optimisticMessage] });
+
+    // 🌍 BACKGROUND: Auto-translate if enabled
     let finalMessageData = { ...messageData };
     if (autoTranslateEnabled && messageData.text && messageData.text.trim()) {
-      try {
-        console.log("🔄 Auto-translate enabled, checking recipient's language preference...");
-
-        // Get recipient's language preference from backend
-        const recipientSettings = await axiosInstance.get(`/settings/user/${selectedUser._id}`);
+      // Start translation in background - don't block UI
+      Promise.all([
+        axiosInstance.get(`/settings/user/${selectedUser._id}`),
+        detectLanguage(messageData.text)
+      ]).then(async ([recipientSettings, detectedLang]) => {
         const recipientLanguage = recipientSettings.data?.settings?.preferredLanguage || 'en';
-
-        console.log(`🎯 Recipient (${selectedUser.fullName}) preferred language: ${recipientLanguage}`);
-
-        // Detect sender's language
-        const detectedLang = await detectLanguage(messageData.text);
-        console.log(`🔍 Detected sender language: ${detectedLang}`);
-
-        // Extract language code from detection result
         const detectedLanguageCode = detectedLang?.language || 'en';
-        console.log("🔍 Detected language code:", detectedLanguageCode);
+
+        console.log(`🎯 Auto-translate: ${detectedLanguageCode} → ${recipientLanguage}`);
 
         // Only translate if languages are different
         if (detectedLanguageCode !== recipientLanguage) {
-          console.log(`🌍 Translating from ${detectedLanguageCode} to ${recipientLanguage}...`);
           const translationResult = await translateText(messageData.text, recipientLanguage, detectedLanguageCode);
 
           if (translationResult && translationResult.translatedText) {
             finalMessageData.text = translationResult.translatedText;
             finalMessageData.originalText = messageData.text;
-            finalMessageData.translatedFrom = detectedLanguageCode; // Store only the language code
+            finalMessageData.translatedFrom = detectedLanguageCode;
             finalMessageData.translatedTo = recipientLanguage;
-            console.log(`✅ Message auto-translated: "${messageData.text}" → "${translationResult.translatedText}"`);
+
+            console.log(`✅ Auto-translated: "${messageData.text}" → "${translationResult.translatedText}"`);
+
+            // Update the optimistic message with translated text
+            set(state => ({
+              messages: state.messages.map(msg =>
+                msg._id === tempId
+                  ? { ...msg, text: translationResult.translatedText, originalText: messageData.text }
+                  : msg
+              )
+            }));
           }
-        } else {
-          console.log("✅ Languages match, no translation needed");
         }
-      } catch (error) {
+
+        // Send the final message to backend (with or without translation)
+        await sendToBackend(finalMessageData, tempId);
+      }).catch(error => {
         console.error("❌ Auto-translation failed:", error);
-        // Continue with original message if translation fails
-      }
+        // Send original message if translation fails
+        sendToBackend(messageData, tempId);
+      });
+    } else {
+      // No auto-translate, send immediately
+      await sendToBackend(finalMessageData, tempId);
     }
 
-    const tempId = `temp-${Date.now()}`;
+    async function sendToBackend(data, tempId) {
+      try {
+        console.log("🚀 Sending message to backend...");
+        const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, data);
+        console.log("✅ Backend response:", res.data);
 
-    const optimisticMessage = {
-      _id: tempId,
-      senderId: authUser._id,
-      receiverId: selectedUser._id,
-      text: finalMessageData.text,
-      image: finalMessageData.image,
-      originalText: finalMessageData.originalText,
-      translatedFrom: finalMessageData.translatedFrom,
-      translatedTo: finalMessageData.translatedTo,
-      createdAt: new Date().toISOString(),
-      isOptimistic: true, // flag to identify optimistic messages (optional)
-    };
-    // immidetaly update the ui by adding the message
-    set({ messages: [...messages, optimisticMessage] });
-
-    try {
-      console.log("Sending message to backend...");
-      const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, finalMessageData);
-      console.log("Backend response:", res.data);
-
-      // Replace the optimistic message with the real one from the server
-      const updatedMessages = messages.filter(msg => msg._id !== tempId);
-      set({ messages: [...updatedMessages, res.data] });
-    } catch (error) {
-      console.error("Error sending message:", error.response?.data || error.message);
-      // remove optimistic message on failure
-      const filteredMessages = messages.filter(msg => msg._id !== tempId);
-      set({ messages: filteredMessages });
-      toast.error(error.response?.data?.message || "Something went wrong");
+        // Replace the optimistic message with the real one from the server
+        set(state => ({
+          messages: state.messages.map(msg =>
+            msg._id === tempId ? res.data : msg
+          )
+        }));
+      } catch (error) {
+        console.error("❌ Error sending message:", error.response?.data || error.message);
+        // Remove optimistic message on failure
+        set(state => ({
+          messages: state.messages.filter(msg => msg._id !== tempId)
+        }));
+        toast.error(error.response?.data?.message || "Failed to send message");
+      }
     }
   },
 
