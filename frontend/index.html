@@ -7,11 +7,57 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Lingua Link - Real-time messaging with instant translation capabilities" />
+    <meta name="description" content="Lingua Link – One-click instant translation for multilingual chat. Real-time auto-translate coming soon." />
+    <meta name="keywords" content="lingua link, translation, chat, multilingual, instant translation, messaging" />
+    <meta name="author" content="Lingua Link" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/Lingualink Favicons/manifest.json" />
+
+    <meta name="robots" content="index,follow" />
+    <link rel="preconnect" href="https://lingualink-lcyv.onrender.com" crossorigin>
+    <link rel="prefetch" href="/login" as="document">
+    <link rel="prefetch" href="/signup" as="document">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Lingua Link – Chat in any language" />
+    <meta property="og:description" content="Chat across languages with one-click instant translation. Auto-translate coming soon." />
+    <meta property="og:image" content="/screenshot-for-readme.png" />
+    <meta property="og:url" content="/" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lingua Link – Chat in any language" />
+    <meta name="twitter:description" content="Chat across languages with one-click instant translation. Auto-translate coming soon." />
+    <meta name="twitter:image" content="/screenshot-for-readme.png" />
+
     <title>Lingua Link</title>
   </head>
   <body>
     <div id="root"></div>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Lingua Link",
+        "applicationCategory": "CommunicationApplication",
+        "operatingSystem": "Web",
+        "description": "Real-time multilingual messaging with instant translation.",
+        "image": "/screenshot-for-readme.png"
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {"@type": "Question","name": "Is Lingua Link free?","acceptedAnswer": {"@type":"Answer","text":"Yes, you can start for free and message across languages instantly."}},
+          {"@type": "Question","name": "Which languages are supported?","acceptedAnswer": {"@type":"Answer","text":"50+ languages with auto-detection and manual control."}},
+          {"@type": "Question","name": "Do both sides need Lingua Link?","acceptedAnswer": {"@type":"Answer","text":"No, it works for you regardless of the recipient's language or app."}},
+          {"@type": "Question","name": "How do you handle privacy?","acceptedAnswer": {"@type":"Answer","text":"We use secure sessions and guard routes; messages are handled through secure APIs."}}
+        ]
+      }
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
