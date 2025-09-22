@@ -383,10 +383,9 @@ export const useTranslationStore = create((set, get) => ({
         };
 
         set({ isLoading: false });
-        console.log("✅ Message translation successful:", translationResult);
 
         // Refresh translation history to include this new entry
-        get().fetchTranslationHistory();
+        await get().fetchTranslationHistory();
 
         return translationResult;
       } else {
