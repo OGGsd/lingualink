@@ -13,7 +13,8 @@ const SettingsPage = () => {
   const {
     userPreferredLanguage,
     setUserPreferredLanguage,
-    loadUserSettings
+    loadUserSettings,
+    settingsLoaded
   } = useTranslationStore();
 
   // Profile state
@@ -23,7 +24,6 @@ const SettingsPage = () => {
   const fileInputRef = useRef(null);
 
   // Password state
-  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
@@ -42,8 +42,10 @@ const SettingsPage = () => {
   useEffect(() => {
     fetchUserSettings();
     // Load translation settings from database
-    loadUserSettings();
-  }, [loadUserSettings]);
+    if (!settingsLoaded) {
+      loadUserSettings();
+    }
+  }, [loadUserSettings, settingsLoaded]);
 
   const fetchUserSettings = async () => {
     try {
@@ -110,8 +112,8 @@ const SettingsPage = () => {
 
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    if (!currentPassword || !newPassword) {
-      toast.error("All password fields are required");
+    if (!newPassword) {
+      toast.error("New password is required");
       return;
     }
 
@@ -128,13 +130,11 @@ const SettingsPage = () => {
     setIsUpdatingPassword(true);
     try {
       const response = await axiosInstance.put("/settings/password", {
-        currentPassword,
         newPassword
       });
 
       if (response.data.success) {
         toast.success("Password updated successfully!");
-        setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } else {
@@ -208,14 +208,17 @@ const SettingsPage = () => {
         {/* Back Button */}
         <button
           onClick={() => {
+            console.log("Back button clicked"); // Debug log
             try {
               navigate("/");
             } catch (error) {
+              console.error("Navigation error:", error);
               // Fallback navigation
               window.location.href = "/";
             }
           }}
-          className="mb-6 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-200 group hover:bg-slate-800/30 px-3 py-2 rounded-lg"
+          className="mb-6 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-200 group hover:bg-slate-800/30 px-3 py-2 rounded-lg cursor-pointer z-10 relative"
+          style={{ pointerEvents: 'auto' }}
         >
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
           Back to Chat
@@ -331,14 +334,15 @@ const SettingsPage = () => {
             <form onSubmit={handleUpdatePassword} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Current Password
+                  New Password
                 </label>
                 <div className="relative">
                   <input
                     type={showPasswords ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
                     className="w-full px-3 py-2 pr-10 border border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 bg-slate-700/50 text-slate-100 placeholder-slate-400"
+                    placeholder="Enter your new password"
                     required
                   />
                   <button
@@ -353,19 +357,6 @@ const SettingsPage = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  New Password
-                </label>
-                <input
-                  type={showPasswords ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 bg-slate-700/50 text-slate-100 placeholder-slate-400"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
                   Confirm New Password
                 </label>
                 <input
@@ -373,6 +364,7 @@ const SettingsPage = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 bg-slate-700/50 text-slate-100 placeholder-slate-400"
+                  placeholder="Confirm your new password"
                   required
                 />
               </div>

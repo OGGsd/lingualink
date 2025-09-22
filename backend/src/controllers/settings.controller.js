@@ -118,13 +118,13 @@ export const updateUserProfile = async (req, res) => {
 export const updatePassword = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { currentPassword, newPassword } = req.body;
+    const { newPassword } = req.body;
 
-    // Validation
-    if (!currentPassword || !newPassword) {
+    // Validation - Only new password required
+    if (!newPassword) {
       return res.status(400).json({
         success: false,
-        error: "Current password and new password are required"
+        error: "New password is required"
       });
     }
 
@@ -144,15 +144,6 @@ export const updatePassword = async (req, res) => {
       });
     }
 
-    // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({
-        success: false,
-        error: "Current password is incorrect"
-      });
-    }
-
     // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
@@ -165,9 +156,9 @@ export const updatePassword = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in updatePassword:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: "Internal server error" 
+    res.status(500).json({
+      success: false,
+      error: "Internal server error"
     });
   }
 };
