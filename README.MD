@@ -2,11 +2,11 @@
 
 ![Demo App](/frontend/public/screenshot-for-readme.png)
 
-**Lingua Link** is a revolutionary messaging platform that breaks down language barriers with real-time translation capabilities, allowing users to communicate seamlessly across different languages.
+**Lingua Link** is a revolutionary messaging platform that breaks down language barriers with real-time translation capabilities powered by DeepL API, allowing users to communicate seamlessly across different languages.
 
 ## ✨ Key Features:
 
-- 🌐 **Real-time Translation** - Instant message translation between languages
+- 🌐 **Real-time Translation** - Instant message translation between languages powered by DeepL API
 - 🔐 Custom JWT Authentication (no 3rd-party auth)
 - ⚡ Real-time Messaging via Socket.io
 - 🟢 Online/Offline Presence Indicators
@@ -38,6 +38,9 @@ JWT_SECRET=your_jwt_secret
 RESEND_API_KEY=your_resend_api_key
 EMAIL_FROM=your_email_from_address
 EMAIL_FROM_NAME=your_email_from_name
+
+# DeepL Translation API
+DEEPL_API_KEY=your_deepl_api_key
 
 CLIENT_URL=http://localhost:5173
 

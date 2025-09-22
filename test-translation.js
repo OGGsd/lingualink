@@ -1,6 +1,7 @@
 /**
- * TRANSLATION API TEST SCRIPT
- * Tests Featherless AI (Primary) → OpenAI (Fallback) with 3 retry attempts
+ * DEEPL TRANSLATION API TEST SCRIPT
+ * Tests DeepL API for high-quality translation
+ * API Docs: https://developers.deepl.com/docs/api-reference/translate
  */
 
 const dotenv = require('dotenv');
@@ -8,12 +9,10 @@ const dotenv = require('dotenv');
 // Load environment variables
 dotenv.config({ path: './backend/.env' });
 
-const FEATHERLESS_API_KEY = process.env.FEATHERLESS_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
 
-console.log('🔑 API Keys loaded:');
-console.log('- Featherless:', FEATHERLESS_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('- OpenAI:', OPENAI_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('🔑 API Key loaded:');
+console.log('- DeepL:', DEEPL_API_KEY ? '✅ Present' : '❌ Missing');
 
 /**
  * FEATHERLESS AI TRANSLATION (PRIMARY)

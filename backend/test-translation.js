@@ -1,240 +1,214 @@
 /**
- * TRANSLATION API TEST SCRIPT
- * Tests Featherless AI (Primary) → OpenAI (Fallback) with 3 retry attempts
+ * DEEPL TRANSLATION API TEST SCRIPT
+ * Tests DeepL API for high-quality translation
+ * API Docs: https://developers.deepl.com/docs/api-reference/translate
  */
 
 import "dotenv/config";
 
-const FEATHERLESS_API_KEY = process.env.FEATHERLESS_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const DEEPL_API_KEY = process.env.DEEPL_API_KEY;
 
-console.log('🔑 API Keys loaded:');
-console.log('- Featherless:', FEATHERLESS_API_KEY ? '✅ Present' : '❌ Missing');
-console.log('- OpenAI:', OPENAI_API_KEY ? '✅ Present' : '❌ Missing');
+console.log('🔑 API Key loaded:');
+console.log('- DeepL:', DEEPL_API_KEY ? '✅ Present' : '❌ Missing');
+
+// DeepL language code mapping
+const DEEPL_LANGUAGE_MAP = {
+  'en': 'EN',
+  'es': 'ES',
+  'fr': 'FR',
+  'de': 'DE',
+  'it': 'IT',
+  'pt': 'PT',
+  'ru': 'RU',
+  'ja': 'JA',
+  'ko': 'KO',
+  'zh': 'ZH',
+  'ar': 'AR',
+  'tr': 'TR',
+  'pl': 'PL',
+  'nl': 'NL',
+  'sv': 'SV',
+  'da': 'DA',
+  'no': 'NB',
+  'fi': 'FI',
+  'cs': 'CS',
+  'hu': 'HU',
+  'ro': 'RO',
+  'bg': 'BG',
+  'hr': 'HR',
+  'sk': 'SK',
+  'sl': 'SL',
+  'et': 'ET',
+  'lv': 'LV',
+  'lt': 'LT',
+  'id': 'ID',
+  'uk': 'UK',
+  'el': 'EL',
+  'he': 'HE'
+};
 
 /**
- * FEATHERLESS AI TRANSLATION (PRIMARY)
- * Uses Meta-Llama-3.1-8B-Instruct model
- * API Docs: https://docs.featherless.ai/
+ * DEEPL TRANSLATION
+ * Uses DeepL API for professional translation
+ * API Docs: https://developers.deepl.com/docs/api-reference/translate
  */
-async function translateWithFeatherless(text, targetLanguage, sourceLanguage = 'auto', retryCount = 0) {
+async function translateWithDeepL(text, targetLanguage, sourceLanguage = 'auto', retryCount = 0) {
   const maxRetries = 3;
-  
+
   try {
-    console.log(`🪶 [Attempt ${retryCount + 1}/${maxRetries}] Featherless AI Translation...`);
+    console.log(`🌍 [Attempt ${retryCount + 1}/${maxRetries}] DeepL Translation...`);
     console.log(`📝 Text: "${text}"`);
     console.log(`🎯 Target: ${targetLanguage}, Source: ${sourceLanguage}`);
 
-    const prompt = `Translate the following text from ${sourceLanguage === 'auto' ? 'automatically detected language' : sourceLanguage} to ${targetLanguage}. Only return the translated text, nothing else:\n\n${text}`;
+    // Convert language codes to DeepL format
+    const targetLang = DEEPL_LANGUAGE_MAP[targetLanguage] || targetLanguage.toUpperCase();
+    const sourceLang = sourceLanguage === 'auto' ? null : (DEEPL_LANGUAGE_MAP[sourceLanguage] || sourceLanguage.toUpperCase());
 
-    const response = await fetch('https://api.featherless.ai/v1/chat/completions', {
+    // Prepare request body
+    const requestBody = {
+      text: [text],
+      target_lang: targetLang,
+      model_type: 'prefer_quality_optimized'
+    };
+
+    // Add source language if specified
+    if (sourceLang) {
+      requestBody.source_lang = sourceLang;
+    }
+
+    // Use API Free endpoint if the key ends with ':fx', otherwise use Pro endpoint
+    const isApiFree = DEEPL_API_KEY.endsWith(':fx');
+    const apiEndpoint = isApiFree
+      ? 'https://api-free.deepl.com/v2/translate'
+      : 'https://api.deepl.com/v2/translate';
+
+    console.log(`🔗 Using endpoint: ${apiEndpoint}`);
+
+    const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FEATHERLESS_API_KEY}`
+        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`
       },
-      body: JSON.stringify({
-        model: 'meta-llama/Meta-Llama-3.1-8B-Instruct',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 150,
-        temperature: 0.1
-      })
+      body: JSON.stringify(requestBody)
     });
 
-    console.log(`📡 Featherless Response Status: ${response.status}`);
+    console.log(`📡 DeepL Response Status: ${response.status}`);
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Featherless API Error ${response.status}: ${errorText}`);
+      throw new Error(`DeepL API Error ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('📦 Featherless Response:', JSON.stringify(data, null, 2));
+    console.log('📦 DeepL Response:', JSON.stringify(data, null, 2));
 
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      const translatedText = data.choices[0].message.content.trim();
-      console.log(`✅ Featherless Success: "${translatedText}"`);
-      
+    if (data.translations && data.translations.length > 0) {
+      const translation = data.translations[0];
+      const translatedText = translation.text;
+      const detectedSourceLang = translation.detected_source_language?.toLowerCase() || sourceLanguage;
+
+      console.log(`✅ DeepL Success: "${translatedText}"`);
+      console.log(`🔍 Detected source language: ${detectedSourceLang}`);
+      console.log(`🤖 Model used: ${translation.model_type_used || data.model_type_used || 'unknown'}`);
+
       return {
         success: true,
         translatedText,
-        provider: 'featherless',
-        sourceLanguage,
+        provider: 'deepl',
+        sourceLanguage: detectedSourceLang,
         targetLanguage,
-        attempt: retryCount + 1
+        attempt: retryCount + 1,
+        modelType: translation.model_type_used || data.model_type_used
       };
     } else {
-      throw new Error('Invalid response format from Featherless');
+      throw new Error('No translation returned from DeepL API');
     }
 
   } catch (error) {
-    console.error(`❌ Featherless Attempt ${retryCount + 1} Failed:`, error.message);
-    
+    console.error(`❌ DeepL Attempt ${retryCount + 1} Failed:`, error.message);
+
     if (retryCount < maxRetries - 1) {
-      console.log(`🔄 Retrying Featherless (${retryCount + 2}/${maxRetries})...`);
+      console.log(`🔄 Retrying DeepL (${retryCount + 2}/${maxRetries})...`);
       await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      return translateWithFeatherless(text, targetLanguage, sourceLanguage, retryCount + 1);
+      return translateWithDeepL(text, targetLanguage, sourceLanguage, retryCount + 1);
     }
-    
+
     return {
       success: false,
       error: error.message,
-      provider: 'featherless',
+      provider: 'deepl',
       attempts: maxRetries
     };
   }
 }
 
 /**
- * OPENAI TRANSLATION (FALLBACK)
- * Uses GPT-4o-mini model
- * API Docs: https://platform.openai.com/docs/api-reference/chat
+ * MAIN TEST FUNCTION
  */
-async function translateWithOpenAI(text, targetLanguage, sourceLanguage = 'auto', retryCount = 0) {
-  const maxRetries = 3;
-  
-  try {
-    console.log(`🤖 [Attempt ${retryCount + 1}/${maxRetries}] OpenAI Translation...`);
-    console.log(`📝 Text: "${text}"`);
-    console.log(`🎯 Target: ${targetLanguage}, Source: ${sourceLanguage}`);
+async function runTranslationTests() {
+  console.log('\n🚀 Starting DeepL Translation Tests...\n');
 
-    const prompt = `Translate the following text from ${sourceLanguage === 'auto' ? 'automatically detected language' : sourceLanguage} to ${targetLanguage}. Only return the translated text, nothing else:\n\n${text}`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 150,
-        temperature: 0.1
-      })
-    });
-
-    console.log(`📡 OpenAI Response Status: ${response.status}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API Error ${response.status}: ${errorText}`);
-    }
-
-    const data = await response.json();
-    console.log('📦 OpenAI Response:', JSON.stringify(data, null, 2));
-
-    if (data.choices && data.choices[0] && data.choices[0].message) {
-      const translatedText = data.choices[0].message.content.trim();
-      console.log(`✅ OpenAI Success: "${translatedText}"`);
-      
-      return {
-        success: true,
-        translatedText,
-        provider: 'openai-fallback',
-        sourceLanguage,
-        targetLanguage,
-        attempt: retryCount + 1
-      };
-    } else {
-      throw new Error('Invalid response format from OpenAI');
-    }
-
-  } catch (error) {
-    console.error(`❌ OpenAI Attempt ${retryCount + 1} Failed:`, error.message);
-    
-    if (retryCount < maxRetries - 1) {
-      console.log(`🔄 Retrying OpenAI (${retryCount + 2}/${maxRetries})...`);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-      return translateWithOpenAI(text, targetLanguage, sourceLanguage, retryCount + 1);
-    }
-    
-    return {
-      success: false,
-      error: error.message,
-      provider: 'openai',
-      attempts: maxRetries
-    };
-  }
-}
-
-/**
- * MAIN TRANSLATION FUNCTION WITH FALLBACK LOGIC
- * Featherless (Primary) → OpenAI (Fallback) → Error Message
- */
-async function translateText(text, targetLanguage, sourceLanguage = 'auto') {
-  console.log('\n🌍 ===== TRANSLATION TEST STARTED =====');
-  console.log(`📝 Input: "${text}"`);
-  console.log(`🎯 Target Language: ${targetLanguage}`);
-  console.log(`🔍 Source Language: ${sourceLanguage}`);
-  console.log('🔄 Strategy: Featherless (Primary) → OpenAI (Fallback) → Error');
-  
-  // STEP 1: Try Featherless AI (PRIMARY)
-  console.log('\n🪶 ===== TRYING FEATHERLESS AI (PRIMARY) =====');
-  const featherlessResult = await translateWithFeatherless(text, targetLanguage, sourceLanguage);
-  
-  if (featherlessResult.success) {
-    console.log('\n🎉 ===== TRANSLATION SUCCESSFUL WITH FEATHERLESS =====');
-    return featherlessResult;
-  }
-  
-  // STEP 2: Try OpenAI (FALLBACK)
-  console.log('\n🤖 ===== FEATHERLESS FAILED, TRYING OPENAI (FALLBACK) =====');
-  const openaiResult = await translateWithOpenAI(text, targetLanguage, sourceLanguage);
-  
-  if (openaiResult.success) {
-    console.log('\n🎉 ===== TRANSLATION SUCCESSFUL WITH OPENAI FALLBACK =====');
-    return openaiResult;
-  }
-  
-  // STEP 3: Both failed - return error
-  console.log('\n💥 ===== ALL PROVIDERS FAILED =====');
-  return {
-    success: false,
-    error: 'Failed to translate, try again later',
-    translatedText: null,
-    provider: 'none',
-    sourceLanguage,
-    targetLanguage,
-    featherlessError: featherlessResult.error,
-    openaiError: openaiResult.error
-  };
-}
-
-/**
- * TEST CASES
- */
-async function runTests() {
-  console.log('🧪 ===== STARTING TRANSLATION API TESTS =====\n');
-  
   const testCases = [
-    { text: 'Hello, how are you?', target: 'es', source: 'en' },
-    { text: 'Hola, ¿cómo estás?', target: 'en', source: 'es' },
-    { text: 'Bonjour le monde', target: 'en', source: 'fr' },
-    { text: 'This is a test message', target: 'de', source: 'en' }
+    { text: 'Hello, world!', target: 'es', source: 'en' },
+    { text: 'How are you today?', target: 'fr', source: 'en' },
+    { text: 'This is a test message.', target: 'de', source: 'en' },
+    { text: 'Good morning!', target: 'ja', source: 'en' },
+    { text: 'Thank you very much.', target: 'ko', source: 'en' },
+    { text: 'Auto-detect test', target: 'es', source: 'auto' }
   ];
-  
+
+  let successCount = 0;
+  let failureCount = 0;
+
   for (let i = 0; i < testCases.length; i++) {
     const testCase = testCases[i];
-    console.log(`\n🧪 ===== TEST CASE ${i + 1}/${testCases.length} =====`);
-    
-    const result = await translateText(testCase.text, testCase.target, testCase.source);
-    
-    console.log('\n📊 ===== FINAL RESULT =====');
-    console.log(JSON.stringify(result, null, 2));
-    
+    console.log(`\n📋 Test ${i + 1}/${testCases.length}:`);
+    console.log(`   Text: "${testCase.text}"`);
+    console.log(`   ${testCase.source} → ${testCase.target}`);
+    console.log('   ' + '─'.repeat(50));
+
+    try {
+      const result = await translateWithDeepL(testCase.text, testCase.target, testCase.source);
+
+      if (result.success) {
+        console.log(`   ✅ SUCCESS: "${result.translatedText}"`);
+        console.log(`   📊 Provider: ${result.provider}, Attempt: ${result.attempt}`);
+        successCount++;
+      } else {
+        console.log(`   ❌ FAILED: ${result.error}`);
+        failureCount++;
+      }
+    } catch (error) {
+      console.log(`   💥 ERROR: ${error.message}`);
+      failureCount++;
+    }
+
+    // Wait between tests to avoid rate limiting
     if (i < testCases.length - 1) {
-      console.log('\n⏳ Waiting 2 seconds before next test...');
+      console.log('   ⏳ Waiting 2 seconds...');
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
   }
-  
-  console.log('\n🏁 ===== ALL TESTS COMPLETED =====');
+
+  console.log('\n' + '='.repeat(60));
+  console.log('📊 FINAL RESULTS:');
+  console.log(`✅ Successful: ${successCount}`);
+  console.log(`❌ Failed: ${failureCount}`);
+  console.log(`📈 Success Rate: ${((successCount / testCases.length) * 100).toFixed(1)}%`);
+  console.log('='.repeat(60));
+}
+
+// Check if DeepL API key is available
+if (!DEEPL_API_KEY) {
+  console.error('❌ DEEPL_API_KEY not found in environment variables');
+  console.log('Please add DEEPL_API_KEY to your .env file');
+  process.exit(1);
 }
 
 // Run the tests
-runTests().catch(console.error);
+runTranslationTests().catch(error => {
+  console.error('💥 Test execution failed:', error);
+  process.exit(1);
+});
+

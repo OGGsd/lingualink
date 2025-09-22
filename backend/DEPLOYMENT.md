@@ -16,8 +16,7 @@ JWT_SECRET=your_jwt_secret
 RESEND_API_KEY=your_resend_api_key
 EMAIL_FROM=your_email
 EMAIL_FROM_NAME=Your App Name
-OPENAI_API_KEY=your_openai_api_key
-FEATHERLESS_API_KEY=your_featherless_api_key
+DEEPL_API_KEY=your_deepl_api_key
 ```
 
 ### Deployment Steps

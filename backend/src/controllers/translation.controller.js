@@ -52,11 +52,8 @@ export const translateMessage = async (req, res) => {
       });
     }
 
-    // Get user's custom OpenAI API key if they have one
-    const userApiKey = await UserSettings.getUserApiKey(userId);
-
-    // Perform translation with user's API key (if available)
-    const result = await translateText(text, targetLanguage, sourceLanguage, userApiKey);
+    // Perform translation using DeepL API
+    const result = await translateText(text, targetLanguage, sourceLanguage);
 
     if (result.success) {
       res.status(200).json({
@@ -205,23 +202,19 @@ export const batchTranslate = async (req, res) => {
  */
 export const getTranslationStatus = async (req, res) => {
   try {
-    // Test both APIs with a simple phrase
+    // Test DeepL API with a simple phrase
     const testText = "Hello, world!";
     const testTargetLang = "es";
 
-    const openaiTest = await translateText(testText, testTargetLang, 'en', 'openai');
-    const featherlessTest = await translateText(testText, testTargetLang, 'en', 'featherless');
+    const deeplTest = await translateText(testText, testTargetLang, 'en');
 
     res.status(200).json({
       success: true,
       status: {
-        openai: {
-          available: openaiTest.success,
-          error: openaiTest.success ? null : openaiTest.error
-        },
-        featherless: {
-          available: featherlessTest.success,
-          error: featherlessTest.success ? null : featherlessTest.error
+        deepl: {
+          available: deeplTest.success,
+          error: deeplTest.success ? null : deeplTest.error,
+          provider: deeplTest.provider
         }
       },
       supportedLanguages: Object.keys(SUPPORTED_LANGUAGES).length,
@@ -265,11 +258,8 @@ export const translateMessageById = async (req, res) => {
     const textToTranslate = message.original_text || message.text;
     const actualSourceLanguage = sourceLanguage || message.translated_from || 'auto';
 
-    // Get user's custom OpenAI API key if they have one
-    const userApiKey = await UserSettings.getUserApiKey(userId);
-
-    // Translate the text
-    const translationResult = await translateText(textToTranslate, targetLanguage, actualSourceLanguage, userApiKey);
+    // Translate the text using DeepL
+    const translationResult = await translateText(textToTranslate, targetLanguage, actualSourceLanguage);
 
     if (!translationResult.success) {
       return res.status(500).json({ error: translationResult.error || "Translation failed" });
@@ -285,7 +275,7 @@ export const translateMessageById = async (req, res) => {
         sourceLanguage: translationResult.sourceLanguage || actualSourceLanguage,
         targetLanguage: targetLanguage,
         translationType: 'manual',
-        apiProvider: translationResult.provider || 'openai'
+        apiProvider: translationResult.provider || 'deepl'
       });
     } catch (historyError) {
       // Continue even if history creation fails
