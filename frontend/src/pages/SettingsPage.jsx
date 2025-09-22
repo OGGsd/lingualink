@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useTranslationStore } from "../store/useTranslationStore";
 import { axiosInstance } from "../lib/axios";
-import { User, Lock, Globe, Key, Save, TestTube, Eye, EyeOff, Camera, Upload, ArrowLeft } from "lucide-react";
+import { User, Lock, Globe, Save, Eye, EyeOff, Camera, Upload, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router";
 import LanguageSelector from "../components/LanguageSelector";
 import toast from "react-hot-toast";
@@ -29,15 +29,11 @@ const SettingsPage = () => {
   const [showPasswords, setShowPasswords] = useState(false);
 
   // Translation settings state - sync with store
-  const [customApiKey, setCustomApiKey] = useState("");
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [hasCustomApiKey, setHasCustomApiKey] = useState(false);
 
   // Loading states
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isUpdatingTranslation, setIsUpdatingTranslation] = useState(false);
-  const [isTestingApiKey, setIsTestingApiKey] = useState(false);
 
   useEffect(() => {
     fetchUserSettings();
@@ -51,7 +47,7 @@ const SettingsPage = () => {
     try {
       const response = await axiosInstance.get("/settings/profile");
       if (response.data.success) {
-        setHasCustomApiKey(response.data.settings.hasCustomApiKey);
+        // Profile settings loaded successfully
       }
     } catch (error) {
       // Error fetching settings
@@ -155,20 +151,6 @@ const SettingsPage = () => {
       // Update via the store's database-driven setter
       await setUserPreferredLanguage(userPreferredLanguage);
 
-      // Update API key separately if provided
-      if (customApiKey !== undefined) {
-        const response = await axiosInstance.put("/settings/translation", {
-          preferredLanguage: userPreferredLanguage,
-          openaiApiKey: customApiKey || null
-        });
-
-        if (response.data.success) {
-          setHasCustomApiKey(!!customApiKey);
-        } else {
-          throw new Error(response.data.error || "Failed to update API key");
-        }
-      }
-
       toast.success("Translation settings updated and saved to database!");
 
     } catch (error) {
@@ -178,29 +160,7 @@ const SettingsPage = () => {
     }
   };
 
-  const handleTestApiKey = async () => {
-    if (!customApiKey.trim()) {
-      toast.error("Please enter an API key to test");
-      return;
-    }
 
-    setIsTestingApiKey(true);
-    try {
-      const response = await axiosInstance.post("/settings/test-api-key", {
-        apiKey: customApiKey
-      });
-
-      if (response.data.success) {
-        toast.success("✅ API key is valid and working!");
-      } else {
-        toast.error(`❌ ${response.data.error}`);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.error || "Failed to test API key");
-    } finally {
-      setIsTestingApiKey(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-900 py-8">
@@ -401,60 +361,6 @@ const SettingsPage = () => {
                 <p className="text-xs text-slate-400 mt-1">
                   This will be your default language when translating messages manually
                 </p>
-              </div>
-
-
-
-              {/* Custom OpenAI API Key */}
-              <div className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="text-sm font-medium text-slate-200 flex items-center">
-                    <Key className="w-4 h-4 mr-2 text-cyan-400" />
-                    Custom OpenAI API Key (Optional)
-                  </label>
-                  {hasCustomApiKey && (
-                    <span className="text-xs bg-cyan-500/20 text-cyan-300 px-2 py-1 rounded-full border border-cyan-500/30">
-                      ✅ Custom key active
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type={showApiKey ? "text" : "password"}
-                      value={customApiKey}
-                      onChange={(e) => setCustomApiKey(e.target.value)}
-                      placeholder="sk-proj-..."
-                      className="w-full px-3 py-2 pr-20 border border-slate-600 rounded-lg focus:ring-2 focus:ring-cyan-500 bg-slate-800/50 text-slate-100 placeholder-slate-400"
-                    />
-                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="text-slate-400 hover:text-slate-300 p-1"
-                      >
-                        {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleTestApiKey}
-                        disabled={!customApiKey.trim() || isTestingApiKey}
-                        className="text-cyan-400 hover:text-cyan-300 disabled:text-slate-500 p-1"
-                        title="Test API key"
-                      >
-                        <TestTube className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-slate-400 space-y-1 bg-slate-800/30 p-3 rounded border border-slate-600/20">
-                    <p>• If provided, your API key will be used with <strong>highest priority</strong></p>
-                    <p>• This gives you unlimited rate limits and fastest response times</p>
-                    <p>• Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:text-cyan-300 underline">OpenAI Platform</a></p>
-                    <p>• Leave empty to use our shared translation service</p>
-                  </div>
-                </div>
               </div>
 
               <button

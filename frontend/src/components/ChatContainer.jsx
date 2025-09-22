@@ -65,17 +65,19 @@ function ChatContainer() {
                     </div>
                   )}
 
-                  <p className="text-xs mt-1 opacity-75 flex items-center gap-1">
-                    {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString(undefined, {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }) : "Now"}
-                  </p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs opacity-75 flex items-center gap-1">
+                      {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString(undefined, {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }) : "Now"}
+                    </p>
 
-                  {/* Translation component for received messages */}
-                  {msg.senderId !== authUser._id && msg.text && (
-                    <MessageTranslation message={msg} />
-                  )}
+                    {/* Translation component for received messages */}
+                    {msg.senderId !== authUser._id && msg.text && (
+                      <MessageTranslation message={msg} />
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
