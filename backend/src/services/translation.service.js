@@ -88,6 +88,19 @@ const DEEPL_LANGUAGE_MAP = {
 async function translateWithDeepL(text, targetLanguage, sourceLanguage = 'auto', retryCount = 0) {
   const maxRetries = 3;
 
+  // Input validation
+  if (!text || typeof text !== 'string' || text.trim().length === 0) {
+    throw new Error('Invalid input: text must be a non-empty string');
+  }
+
+  if (!targetLanguage || typeof targetLanguage !== 'string') {
+    throw new Error('Invalid input: targetLanguage must be a valid language code');
+  }
+
+  if (text.length > 50000) { // DeepL API limit
+    throw new Error('Text too long: maximum 50,000 characters allowed');
+  }
+
   try {
     console.log(`🌍 [DeepL Attempt ${retryCount + 1}/${maxRetries}] Translating: "${text.substring(0, 50)}..."`);
 
@@ -105,6 +118,11 @@ async function translateWithDeepL(text, targetLanguage, sourceLanguage = 'auto',
     // Add source language if specified (not auto-detect)
     if (sourceLang) {
       requestBody.source_lang = sourceLang;
+    }
+
+    // Validate API key exists
+    if (!ENV.DEEPL_API_KEY) {
+      throw new Error('DeepL API key not configured');
     }
 
     // Use API Free endpoint if the key ends with ':fx', otherwise use Pro endpoint
@@ -171,7 +189,7 @@ async function translateWithDeepL(text, targetLanguage, sourceLanguage = 'auto',
 /**
  * Main translation function using DeepL API
  */
-export async function translateText(text, targetLanguage, sourceLanguage = 'auto', userApiKey = null) {
+export async function translateText(text, targetLanguage, sourceLanguage = 'auto') {
   if (!text || !text.trim()) {
     return {
       success: false,

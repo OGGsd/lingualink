@@ -9,6 +9,7 @@ import messageRoutes from "./routes/message.route.js";
 import translationRoutes from "./routes/translation.route.js";
 import settingsRoutes from "./routes/settings.route.js";
 import pingRoutes from "./routes/ping.route.js";
+import healthRoutes from "./routes/health.route.js";
 import { connectDB } from "./lib/db.js";
 import { ENV } from "./lib/env.js";
 import { app, server } from "./lib/socket.js";
@@ -48,6 +49,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/translation", translationRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/ping", pingRoutes);
+app.use("/api/health", healthRoutes);
 
 // make ready for deployment
 if (ENV.NODE_ENV === "production") {

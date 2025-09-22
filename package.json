@@ -1,18 +1,21 @@
 {
-  "name": "lingua-link",
+  "name": "lingualink",
   "version": "1.0.0",
+  "description": "LinguaLink - Breaking Language Barriers with AI-Powered Real-Time Translation",
   "main": "index.js",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
+    "start": "npm run start --prefix backend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "test": "npm run test --prefix backend && npm run test --prefix frontend"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": ["lingualink", "translation", "messaging", "deepl", "real-time", "chat", "multilingual", "ai"],
+  "author": "LinguaLink Team",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^17.2.2",
     "node-fetch": "^3.3.2"

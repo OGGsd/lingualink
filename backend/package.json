@@ -1,7 +1,8 @@
 {
-  "name": "backend",
+  "name": "lingualink-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "LinguaLink Backend - Multi-instance translation API server",
+  "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -10,11 +11,10 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": [],
+  "keywords": ["lingualink", "translation", "messaging", "deepl", "real-time", "chat"],
   "type": "module",
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "author": "LinguaLink Team",
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.7",

@@ -1,12 +1,14 @@
 import { axiosInstance } from '../lib/axios.js';
+import backendManager from './backendManager.js';
 
 class KeepAliveService {
   constructor() {
     this.intervalId = null;
     this.isRunning = false;
-    this.pingInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
+    this.pingInterval = 8 * 60 * 1000; // 8 minutes - SMART resource management
     this.retryDelay = 30 * 1000; // 30 seconds retry delay
     this.maxRetries = 3;
+    this.useBackendManager = import.meta.env.PROD; // Use backend manager in production
   }
 
   /**
@@ -19,10 +21,17 @@ class KeepAliveService {
       return;
     }
 
-    console.log('🚀 Starting keep-alive service (ping every 10 minutes)');
+    console.log('🚀 Starting SMART keep-alive service (resource-efficient)');
     this.isRunning = true;
 
-    // Ping immediately on start
+    // If using backend manager, start it and let it handle keep-alive
+    if (this.useBackendManager) {
+      console.log('🏗️ Using Backend Manager for keep-alive');
+      backendManager.start();
+      return;
+    }
+
+    // Legacy single backend ping
     this.ping();
 
     // Set up interval for regular pings
@@ -42,6 +51,12 @@ class KeepAliveService {
 
     console.log('⏹️ Stopping keep-alive service');
     this.isRunning = false;
+
+    // If using backend manager, stop it
+    if (this.useBackendManager) {
+      backendManager.stop();
+      return;
+    }
 
     if (this.intervalId) {
       clearInterval(this.intervalId);
