@@ -9,7 +9,7 @@ import MessagesLoadingSkeleton from "./MessagesLoadingSkeleton";
 import MessageTranslation from "./MessageTranslation";
 
 
-function ChatContainer() {
+function ChatContainer({ onOpenSidebar }) {
   const {
     selectedUser,
     getMessagesByUserId,
@@ -38,7 +38,7 @@ function ChatContainer() {
 
   return (
     <>
-      <ChatHeader />
+      <ChatHeader onOpenSidebar={onOpenSidebar} />
       <div className="flex-1 px-6 overflow-y-auto py-8">
         {messages.length > 0 && !isMessagesLoading ? (
           <div className="max-w-3xl mx-auto space-y-6">

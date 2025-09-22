@@ -1,12 +1,24 @@
-import { XIcon } from "lucide-react";
+import { XIcon, Menu } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuthStore } from "../store/useAuthStore";
 
-function ChatHeader() {
+function ChatHeader({ onOpenSidebar }) {
   const { selectedUser, setSelectedUser } = useChatStore();
   const { onlineUsers } = useAuthStore();
+  const [isMobile, setIsMobile] = useState(false);
   const isOnline = onlineUsers.includes(String(selectedUser._id));
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleEscKey = (event) => {
@@ -25,6 +37,16 @@ function ChatHeader() {
    border-slate-700/50 max-h-[84px] px-6 flex-1"
     >
       <div className="flex items-center space-x-3">
+        {/* Mobile Menu Button */}
+        {isMobile && onOpenSidebar && (
+          <button
+            onClick={onOpenSidebar}
+            className="p-2 -ml-2 text-slate-400 hover:text-cyan-400 transition-colors md:hidden"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
         <div className={`avatar ${isOnline ? "online" : "offline"}`}>
           <div className="w-12 rounded-full">
             <img src={selectedUser.profilePic || "/avatar.png"} alt={selectedUser.fullName} />

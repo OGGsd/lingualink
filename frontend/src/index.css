@@ -177,3 +177,66 @@
 .search-spinner {
   animation: search-spin 1s linear infinite;
 }
+
+/* Mobile Responsive Sidebar */
+@keyframes sidebar-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes sidebar-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.mobile-sidebar-enter {
+  animation: sidebar-slide-in 0.3s ease-out;
+}
+
+.mobile-sidebar-exit {
+  animation: sidebar-slide-out 0.3s ease-out;
+}
+
+/* Mobile overlay fade */
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-overlay {
+  animation: overlay-fade-in 0.3s ease-out;
+}
+
+/* Mobile menu button pulse */
+@keyframes menu-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.menu-button:active {
+  animation: menu-pulse 0.2s ease-out;
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 768px) {
+  .chat-container {
+    padding: 1rem;
+  }
+
+  .search-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .mobile-header {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}
