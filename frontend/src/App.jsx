@@ -25,7 +25,6 @@ function App() {
     checkAuth();
 
     // Start keep-alive service for Render free tier
-    console.log("🚀 Starting keep-alive service to prevent backend sleeping");
     keepAliveService.start();
 
     // Cleanup on unmount
@@ -44,7 +43,7 @@ function App() {
   // Load user settings when authenticated
   useEffect(() => {
     if (authUser && !settingsLoaded) {
-      console.log("🔄 User authenticated, loading settings...");
+
       loadUserSettings();
     }
   }, [authUser, settingsLoaded, loadUserSettings]);

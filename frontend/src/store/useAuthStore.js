@@ -3,7 +3,24 @@ import { axiosInstance } from "../lib/axios";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || "https://lingualink-lcyv.onrender.com";
+// Use backend manager for dynamic URL selection in production
+const getSocketBaseUrl = () => {
+  if (import.meta.env.PROD) {
+    // In production, use the backend manager's current URL
+    try {
+      const backendManager = window.backendManager;
+      if (backendManager) {
+        return backendManager.getApiUrl().replace('/api', '');
+      }
+    } catch (error) {
+      // Fallback if backend manager not available
+    }
+    // Fallback to first backend from environment
+    return import.meta.env.VITE_RENDER_BACKEND_1 || import.meta.env.VITE_API_URL?.replace('/api', '');
+  }
+  // Development mode
+  return import.meta.env.VITE_API_URL?.replace('/api', '') || "http://localhost:3000";
+};
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -83,7 +100,8 @@ export const useAuthStore = create((set, get) => ({
 
 
 
-    const socket = io(BASE_URL, {
+    const socketUrl = getSocketBaseUrl();
+    const socket = io(socketUrl, {
       withCredentials: true, // this ensures cookies are sent with the connection
     });
 
@@ -95,7 +113,7 @@ export const useAuthStore = create((set, get) => ({
       // Socket disconnected
     });
 
-    socket.on("connect_error", (error) => {
+    socket.on("connect_error", () => {
       // Socket.io will automatically retry connection
     });
 

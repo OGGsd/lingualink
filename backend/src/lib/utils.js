@@ -26,15 +26,15 @@ export const generateToken = (userId, res) => {
     };
     console.log("🍪 Setting development cookie with sameSite=none, secure=true");
   } else {
-    // Production mode: Strict security settings
+    // Production mode: Cross-domain cookie settings for multi-backend architecture
     cookieSettings = {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       httpOnly: true, // prevent XSS attacks
-      sameSite: "strict", // CSRF protection
-      secure: ENV.NODE_ENV === "production", // HTTPS only in production
+      sameSite: "none", // Allow cross-site requests for multi-backend setup
+      secure: true, // Required when sameSite=none, and we're using HTTPS
       domain: undefined, // Let browser handle domain
     };
-    console.log("🍪 Setting production cookie with sameSite=strict");
+    console.log("🍪 Setting production cookie with sameSite=none for multi-backend support");
   }
 
   res.cookie("jwt", token, cookieSettings);

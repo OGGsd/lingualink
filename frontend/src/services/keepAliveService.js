@@ -17,16 +17,13 @@ class KeepAliveService {
    */
   start() {
     if (this.isRunning) {
-      console.log('🔄 Keep-alive service is already running');
       return;
     }
 
-    console.log('🚀 Starting SMART keep-alive service (resource-efficient)');
     this.isRunning = true;
 
     // If using backend manager, start it and let it handle keep-alive
     if (this.useBackendManager) {
-      console.log('🏗️ Using Backend Manager for keep-alive');
       backendManager.start();
       return;
     }
@@ -49,7 +46,7 @@ class KeepAliveService {
       return;
     }
 
-    console.log('⏹️ Stopping keep-alive service');
+
     this.isRunning = false;
 
     // If using backend manager, stop it
@@ -69,35 +66,21 @@ class KeepAliveService {
    */
   async ping(retryCount = 0) {
     try {
-      const startTime = Date.now();
-      const response = await axiosInstance.get('/ping', {
+      await axiosInstance.get('/ping', {
         timeout: 5000, // 5 second timeout
       });
-
-      const responseTime = Date.now() - startTime;
       
-      console.log(`💚 Keep-alive ping successful (${responseTime}ms)`, {
-        status: response.data.status,
-        serverUptime: Math.round(response.data.uptime / 60), // minutes
-        timestamp: new Date(response.data.timestamp).toLocaleTimeString()
-      });
+
 
       return true;
     } catch (error) {
-      console.warn(`❌ Keep-alive ping failed (attempt ${retryCount + 1}/${this.maxRetries})`, {
-        error: error.message,
-        status: error.response?.status,
-        timestamp: new Date().toLocaleTimeString()
-      });
-
       // Retry logic for failed pings
       if (retryCount < this.maxRetries - 1) {
-        console.log(`🔄 Retrying ping in ${this.retryDelay / 1000} seconds...`);
         setTimeout(() => {
           this.ping(retryCount + 1);
         }, this.retryDelay);
       } else {
-        console.error('💀 Keep-alive ping failed after all retries. Backend may be sleeping.');
+
       }
 
       return false;

@@ -18,19 +18,12 @@ class ApiService {
    * Initialize the API service
    */
   async initialize() {
-    console.log('🚀 Initializing API Service...');
-    
     // Start backend manager in production
     if (import.meta.env.PROD) {
       backendManager.start();
-      
+
       // Wait for initial health check
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const status = backendManager.getStatus();
-      console.log(`✅ API Service initialized with ${status.healthyCount}/${status.totalCount} healthy backends`);
-    } else {
-      console.log('✅ API Service initialized in development mode');
     }
   }
 
@@ -42,7 +35,7 @@ class ApiService {
       const response = await axiosInstance(config);
       return response;
     } catch (error) {
-      console.warn(`⚠️ API request failed (attempt ${retryCount + 1}/${this.maxRetries}):`, error.message);
+
 
       // If we have retries left and it's a server error, try again
       if (retryCount < this.maxRetries - 1 && this.shouldRetry(error)) {

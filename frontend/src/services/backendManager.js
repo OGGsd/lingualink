@@ -55,14 +55,14 @@ class BackendManager {
     this.loadBalancer = new LoadBalancer(this);
     this.smartKeepAlive = new SmartKeepAlive(this);
 
-    console.log('🏗️ Backend Manager initialized with', this.backends.length, 'backend instances');
+
   }
 
   /**
    * Reload backend configuration (for dynamic scaling)
    */
   reloadBackends() {
-    console.log('🔄 Reloading backend configuration...');
+
     const oldCount = this.backends.length;
     this.backends = backendConfig.getBackends();
 
@@ -80,7 +80,7 @@ class BackendManager {
       }
     });
 
-    console.log(`🔄 Backend configuration reloaded: ${oldCount} → ${this.backends.length} instances`);
+
     return this.backends.length;
   }
 
@@ -88,7 +88,6 @@ class BackendManager {
    * Start the backend manager services
    */
   start() {
-    console.log('🚀 Starting Backend Manager services...');
 
     // Start smart keep-alive system (replaces old keep-alive)
     this.smartKeepAlive.start();
@@ -101,14 +100,13 @@ class BackendManager {
       this.performHealthCheck();
     }, this.healthCheckInterval);
 
-    console.log('✅ Backend Manager services started with Smart Keep-Alive');
+
   }
 
   /**
    * Stop the backend manager services
    */
   stop() {
-    console.log('⏹️ Stopping Backend Manager services...');
 
     // Stop smart keep-alive
     this.smartKeepAlive.stop();
@@ -118,7 +116,7 @@ class BackendManager {
       this.healthCheckIntervalId = null;
     }
 
-    console.log('✅ Backend Manager services stopped');
+
   }
 
   /**
@@ -172,7 +170,7 @@ class BackendManager {
         // Try to wake up a sleeping backend if all are unhealthy
         const sleepingBackend = this.backends.find(b => !this.healthStatus.get(b.id).isHealthy);
         if (sleepingBackend && !attemptedBackends.has(sleepingBackend.id)) {
-          console.log(`🔧 Attempting to wake up Backend ${sleepingBackend.id}...`);
+
           await this.wakeUpBackend(sleepingBackend.id);
           continue;
         }
@@ -188,7 +186,7 @@ class BackendManager {
       attemptedBackends.add(backend.id);
 
       try {
-        console.log(`🚀 [Attempt ${attempt + 1}/${maxRetries}] Making request to Backend ${backend.id}: ${endpoint}`);
+
 
         const url = `${backend.url}${endpoint}`;
         const controller = new AbortController();
@@ -220,7 +218,7 @@ class BackendManager {
           health.consecutiveFailures = 0;
           health.lastError = null;
 
-          console.log(`✅ Request successful via Backend ${backend.id}`);
+
           return response;
         } else {
           const errorText = await response.text().catch(() => 'Unknown error');
@@ -237,23 +235,23 @@ class BackendManager {
           health.isHealthy = false;
           health.consecutiveFailures++;
           health.lastError = 'Request timeout';
-          console.warn(`❌ Backend ${backend.id} timed out`);
+
         } else if (error.message.includes('fetch') || error.message.includes('network')) {
           health.isHealthy = false;
           health.consecutiveFailures++;
           health.lastError = error.message;
-          console.warn(`❌ Backend ${backend.id} network error: ${error.message}`);
+
         } else {
           // Server error - don't mark as unhealthy immediately
-          console.warn(`⚠️ Backend ${backend.id} server error: ${error.message}`);
+
         }
 
-        console.warn(`⚠️ Request failed on Backend ${backend.id}: ${error.message}`);
+
 
         // Wait before retry (exponential backoff)
         if (attempt < maxRetries - 1) {
           const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
-          console.log(`⏳ Retrying in ${delay}ms...`);
+
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -346,7 +344,7 @@ class BackendManager {
       health.consecutiveFailures++;
       health.lastError = error.message;
 
-      console.warn(`❌ Backend ${backend.id} health check failed:`, error.message);
+
     }
   }
 
@@ -402,7 +400,7 @@ class BackendManager {
     const backend = this.backends.find(b => b.id === backendId);
     if (backend) {
       this.lastUsedBackend = backend;
-      console.log(`🔧 Forced switch to backend ${backendId}`);
+
       return true;
     }
     return false;
@@ -444,5 +442,10 @@ class BackendManager {
 
 // Create singleton instance
 const backendManager = new BackendManager();
+
+// Expose globally for auth store access
+if (typeof window !== 'undefined') {
+  window.backendManager = backendManager;
+}
 
 export default backendManager;

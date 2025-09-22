@@ -19,18 +19,16 @@ class BackendConfig {
     let backendIndex = 1;
     const maxBackends = 50; // Safety limit to prevent infinite loop
 
-    console.log('🔧 Loading backend configuration from environment variables...');
-
     // Keep checking for backend environment variables
     while (backendIndex <= maxBackends) {
       const backendUrl = import.meta.env[`VITE_RENDER_BACKEND_${backendIndex}`];
-      
+
       if (!backendUrl) {
         break; // No more backends found
       }
 
       const fromEmail = import.meta.env[`VITE_FROM_EMAIL_ACCOUNT_${backendIndex}`];
-      
+
       const backend = {
         id: backendIndex,
         url: this.normalizeUrl(backendUrl),
@@ -40,14 +38,11 @@ class BackendConfig {
       };
 
       backends.push(backend);
-      console.log(`✅ Backend ${backendIndex}: ${backend.url} (${backend.email})`);
-      
       backendIndex++;
     }
 
     // Development fallback
     if (backends.length === 0 && import.meta.env.DEV) {
-      console.warn('⚠️ No backend environment variables found, using development fallback');
       backends.push({
         id: 1,
         url: 'http://localhost:3000',
@@ -56,8 +51,6 @@ class BackendConfig {
         createdAt: new Date().toISOString()
       });
     }
-
-    console.log(`🏗️ Loaded ${backends.length} backend instances`);
     return backends;
   }
 
@@ -86,7 +79,7 @@ class BackendConfig {
       }
     });
 
-    console.log('✅ Backend configuration validated successfully');
+
   }
 
   /**
@@ -135,7 +128,7 @@ class BackendConfig {
     const index = this.backends.findIndex(backend => backend.id === id);
     if (index !== -1) {
       const removed = this.backends.splice(index, 1)[0];
-      console.log(`➖ Removed backend ${id}: ${removed.url}`);
+
       return removed;
     }
     return null;
@@ -161,7 +154,7 @@ class BackendConfig {
    * Reload configuration from environment
    */
   reload() {
-    console.log('🔄 Reloading backend configuration...');
+
     this.backends = this.loadBackendsFromEnv();
     this.validateConfiguration();
     return this.backends.length;

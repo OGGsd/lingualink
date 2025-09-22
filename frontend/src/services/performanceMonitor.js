@@ -40,7 +40,7 @@ class PerformanceMonitor {
     this.isMonitoring = false;
     this.monitoringInterval = null;
 
-    console.log('📊 Performance Monitor initialized');
+
   }
 
   /**
@@ -347,7 +347,7 @@ class PerformanceMonitor {
     };
 
     this.startTime = Date.now();
-    console.log('🔄 Performance metrics reset');
+
   }
 }
 

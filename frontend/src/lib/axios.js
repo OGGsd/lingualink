@@ -17,7 +17,7 @@ axiosInstance.interceptors.request.use(
       config.baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
     }
 
-    console.log(`🌐 API Request: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+
     return config;
   },
   (error) => {
@@ -46,7 +46,7 @@ axiosInstance.interceptors.response.use(
     if (import.meta.env.PROD && !originalRequest._retry && error.response?.status >= 500) {
       originalRequest._retry = true;
 
-      console.warn(`⚠️ Request failed, trying different backend...`);
+
 
       // Force a health check to update backend status
       await backendManager.performHealthCheck();

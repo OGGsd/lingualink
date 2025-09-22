@@ -34,11 +34,8 @@ class SmartKeepAlive {
    */
   start() {
     if (this.intervalId) {
-      console.log('🔄 Smart Keep-Alive already running');
       return;
     }
-
-    console.log('🚀 Starting Smart Keep-Alive system...');
     
     // Initialize with primary backend
     this.selectInitialBackends();
@@ -51,7 +48,7 @@ class SmartKeepAlive {
     // Immediate first ping
     this.performSmartKeepAlive();
     
-    console.log(`✅ Smart Keep-Alive started (${this.maxActiveBackends} active backends, ${this.rotationInterval/60000}min rotation)`);
+
   }
 
   /**
@@ -88,7 +85,7 @@ class SmartKeepAlive {
    * Perform smart keep-alive with resource optimization
    */
   async performSmartKeepAlive() {
-    console.log('🧠 Smart Keep-Alive cycle starting...');
+
     
     // 1. Ping currently active backends
     await this.pingActiveBackends();
@@ -99,7 +96,7 @@ class SmartKeepAlive {
     // 3. Update statistics
     this.updateResourceStats();
     
-    console.log(`📊 Active backends: [${Array.from(this.activeBackends).join(', ')}] | Pings: ${this.stats.totalPings} | Rotations: ${this.stats.rotations}`);
+
   }
 
   /**
@@ -150,7 +147,7 @@ class SmartKeepAlive {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`💚 Backend ${backend.id} alive (${responseTime}ms, uptime: ${Math.round(data.uptime / 60)}m)`);
+
         
         // Update backend manager health status
         const health = this.backendManager.healthStatus.get(backend.id);
@@ -164,7 +161,7 @@ class SmartKeepAlive {
         
         return true;
       } else {
-        console.warn(`⚠️ Backend ${backend.id} returned ${response.status}`);
+
         return false;
       }
     } catch (error) {

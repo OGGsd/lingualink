@@ -42,7 +42,7 @@ export const useTranslationStore = create((set, get) => ({
         throw new Error(response.data.error || "Failed to load settings");
       }
     } catch (error) {
-      console.error("❌ Error loading user settings:", error);
+
       // Set defaults if loading fails
       set({
         userPreferredLanguage: "en",

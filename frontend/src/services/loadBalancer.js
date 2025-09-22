@@ -23,7 +23,7 @@ class LoadBalancer {
       this.connectionCounts.set(backend.id, 0);
     });
 
-    console.log('⚖️ Load Balancer initialized with strategy:', this.currentStrategy);
+
   }
 
   /**
@@ -180,7 +180,7 @@ class LoadBalancer {
       current.score > best.score ? current : best
     );
 
-    console.log(`🎯 Health-Based selected backend ${best.backend.id} (score: ${best.score.toFixed(1)})`);
+
     return best.backend;
   }
 
@@ -243,7 +243,7 @@ class LoadBalancer {
       this.connectionCounts.set(backend.id, 0);
     });
     
-    console.log('🔄 Load balancer state reset');
+
   }
 }
 
