@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Languages, ChevronDown, ChevronUp, Globe, Sparkles } from "lucide-react";
+import { Languages, ChevronDown, Sparkles } from "lucide-react";
 import { useTranslationStore } from "../store/useTranslationStore";
 
 const MessageTranslation = ({ message, className = "" }) => {
@@ -49,9 +49,9 @@ const MessageTranslation = ({ message, className = "" }) => {
   }
 
   return (
-    <div className={`${className}`}>
-      {/* Compact Translation Button */}
+    <div className={`relative ${className}`}>
       {!translatedText ? (
+        // Simple translate icon - clean and minimal
         <button
           onClick={handleTranslate}
           disabled={isTranslating}
@@ -65,40 +65,23 @@ const MessageTranslation = ({ message, className = "" }) => {
           )}
         </button>
       ) : (
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center gap-1"
-            title={`${isExpanded ? 'Hide' : 'Show'} translation`}
-          >
-            <Sparkles className="w-3 h-3" />
-            <span className="text-xs">{getLanguageName(translatedText.targetLanguage)}</span>
-            <ChevronDown className={`w-3 h-3 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
+        // Clean language indicator - just like your preferred design
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors duration-200 flex items-center gap-1"
+          title={isExpanded ? 'Hide translation' : 'Show translation'}
+        >
+          <Sparkles className="w-3 h-3" />
+          <span>{getLanguageName(translatedText.targetLanguage)}</span>
+          <ChevronDown className={`w-3 h-3 transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+        </button>
       )}
 
-      {/* Collapsible Translation Content */}
-      {translatedText && (
-        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'
-        }`}>
-          <div className="border border-slate-700/50 rounded-lg bg-slate-800/30 backdrop-blur-sm p-3">
-            {/* Translation Text */}
-            <div className="mb-3">
-              <div className="flex items-center mb-1">
-                <Globe className="w-3 h-3 mr-1 text-cyan-400" />
-                <span className="text-xs font-medium text-cyan-300">
-                  {getLanguageName(translatedText.targetLanguage)}
-                  {translatedText.sourceLanguage !== 'auto' && (
-                    <span className="text-slate-400"> from {getLanguageName(translatedText.sourceLanguage)}</span>
-                  )}
-                </span>
-              </div>
-              <div className="text-slate-100 text-sm leading-relaxed bg-slate-800/40 p-2 rounded border border-slate-700/30">
-                {translatedText.translatedText}
-              </div>
-            </div>
+      {/* Simple translation overlay - appears below message */}
+      {translatedText && isExpanded && (
+        <div className="absolute left-0 right-0 mt-1 p-2 bg-slate-800/95 backdrop-blur-sm border border-slate-700/50 rounded-lg shadow-lg z-10">
+          <div className="text-slate-100 text-sm">
+            {translatedText.translatedText}
           </div>
         </div>
       )}
