@@ -5,11 +5,29 @@ import { useTranslationStore } from "../store/useTranslationStore";
 const LanguageSelector = ({ selectedLanguage, onLanguageChange, label = "Translate to", className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [dropdownPosition, setDropdownPosition] = useState('bottom');
   const { supportedLanguages, fetchSupportedLanguages } = useTranslationStore();
 
   useEffect(() => {
     fetchSupportedLanguages();
   }, [fetchSupportedLanguages]);
+
+  // Smart dropdown positioning to prevent cutoff
+  const handleToggleDropdown = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // If there's not enough space below (less than 320px for dropdown), show above
+    if (spaceBelow < 320 && spaceAbove > spaceBelow) {
+      setDropdownPosition('top');
+    } else {
+      setDropdownPosition('bottom');
+    }
+
+    setIsOpen(!isOpen);
+  };
 
   const filteredLanguages = Object.entries(supportedLanguages).filter(([code, name]) =>
     name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -28,7 +46,7 @@ const LanguageSelector = ({ selectedLanguage, onLanguageChange, label = "Transla
       <div className="relative">
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggleDropdown}
           className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between"
         >
           <span className="block truncate">
@@ -47,9 +65,11 @@ const LanguageSelector = ({ selectedLanguage, onLanguageChange, label = "Transla
         </button>
 
         {isOpen && (
-          <div className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none">
+          <div className={`absolute z-50 w-full bg-white dark:bg-gray-800 shadow-lg max-h-96 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-hidden focus:outline-none ${
+            dropdownPosition === 'top' ? 'bottom-full mb-1' : 'top-full mt-1'
+          }`}>
             {/* Search input */}
-            <div className="sticky top-0 bg-white dark:bg-gray-800 px-3 py-2 border-b border-gray-200 dark:border-gray-600">
+            <div className="sticky top-0 bg-white dark:bg-gray-800 px-3 py-2 border-b border-gray-200 dark:border-gray-600 z-10">
               <input
                 type="text"
                 placeholder="Search languages..."
@@ -60,7 +80,7 @@ const LanguageSelector = ({ selectedLanguage, onLanguageChange, label = "Transla
             </div>
 
             {/* Language options */}
-            <div className="max-h-48 overflow-y-auto">
+            <div className="max-h-80 overflow-y-auto language-dropdown-scroll">
               {filteredLanguages.length > 0 ? (
                 filteredLanguages.map(([code, name]) => (
                   <button
