@@ -44,7 +44,7 @@ class User {
 
   // Find user by ID without password
   static async findByIdWithoutPassword(id) {
-    const query = 'SELECT id, email, full_name, profile_pic, created_at, updated_at FROM users WHERE id = $1';
+    const query = 'SELECT id, email, full_name, profile_pic, is_admin, created_at, updated_at FROM users WHERE id = $1';
 
     try {
       const result = await pool.query(query, [id]);
@@ -89,11 +89,94 @@ class User {
       UPDATE users
       SET password = $1, updated_at = CURRENT_TIMESTAMP
       WHERE id = $2
-      RETURNING id, email, full_name, profile_pic, created_at, updated_at
+      RETURNING id, email, full_name, profile_pic, email_verified, created_at, updated_at
     `;
 
     try {
       const result = await pool.query(query, [hashedPassword, id]);
+      return result.rows.length > 0 ? this.formatUser(result.rows[0]) : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Set email verification token
+  static async setEmailVerificationToken(id, token, expires) {
+    const query = `
+      UPDATE users
+      SET email_verification_token = $1, email_verification_expires = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING id, email, full_name, profile_pic, email_verified, created_at, updated_at
+    `;
+
+    try {
+      const result = await pool.query(query, [token, expires, id]);
+      return result.rows.length > 0 ? this.formatUser(result.rows[0]) : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Verify email with token
+  static async verifyEmailWithToken(token) {
+    const query = `
+      UPDATE users
+      SET email_verified = true, email_verification_token = NULL, email_verification_expires = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE email_verification_token = $1 AND email_verification_expires > NOW()
+      RETURNING id, email, full_name, profile_pic, email_verified, created_at, updated_at
+    `;
+
+    try {
+      const result = await pool.query(query, [token]);
+      return result.rows.length > 0 ? this.formatUser(result.rows[0]) : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Set password reset token
+  static async setPasswordResetToken(email, token, expires) {
+    const query = `
+      UPDATE users
+      SET password_reset_token = $1, password_reset_expires = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE email = $3
+      RETURNING id, email, full_name, profile_pic, email_verified, created_at, updated_at
+    `;
+
+    try {
+      const result = await pool.query(query, [token, expires, email]);
+      return result.rows.length > 0 ? this.formatUser(result.rows[0]) : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Reset password with token
+  static async resetPasswordWithToken(token, hashedPassword) {
+    const query = `
+      UPDATE users
+      SET password = $1, password_reset_token = NULL, password_reset_expires = NULL, updated_at = CURRENT_TIMESTAMP
+      WHERE password_reset_token = $2 AND password_reset_expires > NOW()
+      RETURNING id, email, full_name, profile_pic, email_verified, created_at, updated_at
+    `;
+
+    try {
+      const result = await pool.query(query, [hashedPassword, token]);
+      return result.rows.length > 0 ? this.formatUser(result.rows[0]) : null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Find user by password reset token
+  static async findByPasswordResetToken(token) {
+    const query = `
+      SELECT * FROM users
+      WHERE password_reset_token = $1 AND password_reset_expires > NOW()
+    `;
+
+    try {
+      const result = await pool.query(query, [token]);
       return result.rows.length > 0 ? this.formatUser(result.rows[0]) : null;
     } catch (error) {
       throw error;
@@ -159,6 +242,8 @@ class User {
       fullName: user.full_name,
       password: user.password,
       profilePic: user.profile_pic,
+      emailVerified: user.email_verified || false,
+      isAdmin: user.is_admin || false,
       createdAt: user.created_at,
       updatedAt: user.updated_at
     };

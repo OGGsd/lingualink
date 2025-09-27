@@ -7,6 +7,10 @@ import LandingPage from "./pages/LandingPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import FeaturesPage from "./pages/FeaturesPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AdminDashboard from "./pages/AdminDashboard";
 import { useAuthStore } from "./store/useAuthStore";
 import { useTranslationStore } from "./store/useTranslationStore";
 import { useEffect, useMemo } from "react";
@@ -60,8 +64,16 @@ function App() {
       <Routes>
         <Route path="/" element={authUser ? <ChatPage /> : <LandingPage />} />
         <Route path="/settings" element={authUser ? <SettingsPage /> : <Navigate to={"/login"} />} />
+        <Route path="/admin" element={authUser?.isAdmin ? <AdminDashboard /> : <Navigate to={"/"} />} />
         <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to={"/"} />} />
         <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to={"/"} />} />
+
+        {/* Email verification and password reset routes */}
+        <Route path="/verify-email" element={!authUser ? <EmailVerificationPage /> : <Navigate to={"/"} />} />
+        <Route path="/forgot-password" element={!authUser ? <ForgotPasswordPage /> : <Navigate to={"/"} />} />
+        <Route path="/reset-password" element={!authUser ? <ResetPasswordPage /> : <Navigate to={"/"} />} />
+
+        {/* Public pages */}
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/features" element={<FeaturesPage />} />

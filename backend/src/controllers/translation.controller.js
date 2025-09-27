@@ -94,7 +94,7 @@ export const detectTextLanguage = async (req, res) => {
       });
     }
 
-    const detectedLanguage = detectLanguage(text);
+    const detectedLanguage = await detectLanguage(text);
     const languageName = SUPPORTED_LANGUAGES[detectedLanguage] || 'Unknown';
 
     res.status(200).json({
@@ -102,7 +102,8 @@ export const detectTextLanguage = async (req, res) => {
       text: text,
       detectedLanguage: detectedLanguage,
       languageName: languageName,
-      confidence: 'basic', // Since we're using a basic detection method
+      confidence: detectedLanguage === 'unknown' ? 0.5 : 0.95, // High confidence with AI detection
+      provider: 'lingualink-ai',
       timestamp: new Date().toISOString()
     });
   } catch (error) {

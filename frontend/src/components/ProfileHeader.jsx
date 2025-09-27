@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { LogOutIcon, VolumeOffIcon, Volume2Icon, Settings } from "lucide-react";
+import { LogOutIcon, VolumeOffIcon, Volume2Icon, Settings, Shield } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 import { useNavigate } from "react-router";
@@ -69,6 +69,17 @@ function ProfileHeader() {
 
         {/* BUTTONS */}
         <div className="flex gap-4 items-center">
+          {/* ADMIN BTN - Only show for admin users */}
+          {authUser?.isAdmin && (
+            <button
+              className="text-slate-400 hover:text-cyan-400 transition-colors"
+              onClick={() => navigate('/admin')}
+              title="Admin Dashboard"
+            >
+              <Shield className="size-5" />
+            </button>
+          )}
+
           {/* SETTINGS BTN */}
           <button
             className="text-slate-400 hover:text-slate-200 transition-colors"

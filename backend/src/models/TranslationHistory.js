@@ -10,7 +10,7 @@ class TranslationHistory {
     sourceLanguage, 
     targetLanguage, 
     translationType, // 'auto' or 'manual'
-    apiProvider = 'openai' 
+    apiProvider = 'lingualink-ai'
   }) {
     const query = `
       INSERT INTO translation_history (
@@ -94,7 +94,7 @@ class TranslationHistory {
         source_language VARCHAR(20) NOT NULL,
         target_language VARCHAR(20) NOT NULL,
         translation_type VARCHAR(10) NOT NULL CHECK (translation_type IN ('auto', 'manual')),
-        api_provider VARCHAR(20) DEFAULT 'openai',
+        api_provider VARCHAR(20) DEFAULT 'lingualink-ai',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `;

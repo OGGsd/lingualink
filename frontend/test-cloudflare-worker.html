@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cloudflare Worker Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 LinguaLink Cloudflare Worker Test</h1>
+        
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="healthResult" class="result"></div>
+
+        <h2>2. Admin Analytics</h2>
+        <button onclick="testAnalytics()">Test Admin Analytics</button>
+        <div id="analyticsResult" class="result"></div>
+
+        <h2>3. AI Email Generation</h2>
+        <input type="text" id="emailPrompt" placeholder="Enter email prompt (e.g., 'Create a welcome email')" value="Create a welcome email for new users">
+        <button onclick="testEmailGeneration()">Generate Email</button>
+        <div id="emailResult" class="result"></div>
+
+        <h2>4. Translation Test</h2>
+        <input type="text" id="translateText" placeholder="Text to translate" value="Hello world">
+        <input type="text" id="targetLang" placeholder="Target language (e.g., es, fr, de)" value="es">
+        <button onclick="testTranslation()">Test Translation</button>
+        <div id="translationResult" class="result"></div>
+    </div>
+
+    <script>
+        const WORKER_URL = 'https://lingualink-api.stefanjohnmiranda3.workers.dev';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            resultDiv.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/health`);
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testAnalytics() {
+            const resultDiv = document.getElementById('analyticsResult');
+            resultDiv.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`${WORKER_URL}/api/health/admin/analytics`);
+                const data = await response.json();
+
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = 'result success';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testEmailGeneration() {
+            const resultDiv = document.getElementById('emailResult');
+            const prompt = document.getElementById('emailPrompt').value;
+
+            if (!prompt.trim()) {
+                resultDiv.textContent = 'Please enter a prompt';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            resultDiv.textContent = 'Generating email...';
+
+            try {
+                console.log('🚀 Testing email generation with prompt:', prompt);
+                const response = await fetch(`${WORKER_URL}/api/health/generate-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                console.log('📡 Response status:', response.status);
+                const data = await response.json();
+                console.log('📧 Response data:', data);
+
+                if (data.status === 'success') {
+                    resultDiv.innerHTML = `<strong>✅ Success!</strong><br><br><strong>Generated HTML (first 500 chars):</strong><br><pre>${data.emailHtml.substring(0, 500)}...</pre>`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ Error: ${data.error || 'Unknown error'}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                console.error('❌ Email generation failed:', error);
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testTranslation() {
+            const resultDiv = document.getElementById('translationResult');
+            const text = document.getElementById('translateText').value;
+            const targetLanguage = document.getElementById('targetLang').value;
+            
+            if (!text.trim() || !targetLanguage.trim()) {
+                resultDiv.textContent = 'Please enter text and target language';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            resultDiv.textContent = 'Translating...';
+            
+            try {
+                const response = await fetch(`${WORKER_URL}/api/translation/public/translate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text, 
+                        targetLanguage,
+                        sourceLanguage: 'auto'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.className = data.success ? 'result success' : 'result error';
+            } catch (error) {
+                resultDiv.textContent = `Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Auto-test health on page load
+        window.onload = () => {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

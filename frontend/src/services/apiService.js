@@ -12,6 +12,7 @@ class ApiService {
     this.isProcessingQueue = false;
     this.maxRetries = 3;
     this.retryDelay = 1000; // 1 second
+    this.cloudflareWorkerURL = 'https://lingualink-api.stefanjohnmiranda3.workers.dev';
   }
 
   /**
@@ -234,6 +235,180 @@ class ApiService {
       'weighted_round_robin',
       'health_based'
     ];
+  }
+
+  /**
+   * Admin API Methods
+   */
+
+  /**
+   * Get admin analytics data (using Cloudflare Worker)
+   */
+  async getAdminAnalytics() {
+    try {
+      const response = await fetch(`${this.cloudflareWorkerURL}/api/health/admin/analytics`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to get admin analytics from Cloudflare Worker:', error);
+      // Fallback to local backend
+      const response = await this.get('/health/admin/analytics');
+      return response.data;
+    }
+  }
+
+  /**
+   * Generate email using AI (using Cloudflare Worker)
+   */
+  async generateEmail(prompt) {
+    console.log('🌐 Calling Cloudflare Worker for email generation:', prompt);
+    console.log('🔗 Worker URL:', `${this.cloudflareWorkerURL}/api/health/generate-email`);
+
+    try {
+      const response = await fetch(`${this.cloudflareWorkerURL}/api/health/generate-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt })
+      });
+
+      console.log('📡 Cloudflare Worker response status:', response.status);
+      console.log('📡 Cloudflare Worker response headers:', response.headers);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Response error text:', errorText);
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('📧 Cloudflare Worker response data:', data);
+
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to generate email with Cloudflare Worker:', error);
+
+      try {
+        console.log('🔄 Falling back to local backend...');
+        // Fallback to local backend
+        const response = await this.post('/health/generate-email', { prompt });
+        return response.data;
+      } catch (fallbackError) {
+        console.error('❌ Local backend fallback also failed:', fallbackError);
+        throw new Error(`Both Cloudflare Worker and local backend failed: ${error.message}`);
+      }
+    }
+  }
+
+  /**
+   * Get load balancing statistics
+   */
+  async getLoadBalancingStats() {
+    const response = await this.get('/health/load-balancing');
+    return response.data;
+  }
+
+  /**
+   * Find user by email (Admin only) - using Cloudflare Worker with fallback
+   */
+  async findUser(email) {
+    try {
+      const response = await fetch(`${this.cloudflareWorkerURL}/api/health/admin/find-user/${email}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to find user with Cloudflare Worker:', error);
+      // Fallback to local backend
+      const response = await this.get(`/health/admin/find-user/${email}`);
+      return response.data;
+    }
+  }
+
+  /**
+   * Make user admin (Admin only) - using Cloudflare Worker with fallback
+   */
+  async makeUserAdmin(email) {
+    try {
+      const response = await fetch(`${this.cloudflareWorkerURL}/api/health/admin/make-admin/${email}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Failed to make user admin with Cloudflare Worker:', error);
+      // Fallback to local backend
+      const response = await this.post(`/health/admin/make-admin/${email}`);
+      return response.data;
+    }
+  }
+
+  /**
+   * Remove admin privileges (Admin only)
+   */
+  async removeUserAdmin(email) {
+    try {
+      const response = await this.post(`/health/admin/remove-admin/${email}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to remove admin privileges:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all users (Admin only)
+   */
+  async getAllUsers() {
+    try {
+      const response = await this.get('/health/admin/users');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get all users:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get enhanced analytics (Admin only)
+   */
+  async getEnhancedAnalytics() {
+    try {
+      const response = await this.get('/health/admin/enhanced-analytics');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get enhanced analytics:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Send email (Admin only)
+   */
+  async sendEmail(emailData) {
+    try {
+      const response = await this.post('/health/admin/send-email', emailData);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get email templates (Admin only)
+   */
+  async getEmailTemplates() {
+    try {
+      const response = await this.get('/health/admin/email-templates');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get email templates:', error);
+      throw error;
+    }
   }
 
   /**

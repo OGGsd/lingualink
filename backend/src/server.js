@@ -81,5 +81,8 @@ if (ENV.NODE_ENV === "production") {
 }
 
 server.listen(PORT, () => {
+  console.log(`🚀 LinguaLink Backend Server running on port ${PORT}`);
+  console.log(`🧠 LinguaLink AI Translation System: ACTIVE`);
+  console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
   connectDB();
 });

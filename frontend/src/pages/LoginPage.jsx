@@ -72,8 +72,11 @@ function LoginPage() {
                   </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                  <Link to="/signup" className="auth-link">
+                <div className="mt-6 text-center space-y-2">
+                  <Link to="/forgot-password" className="auth-link block">
+                    Forgot your password?
+                  </Link>
+                  <Link to="/signup" className="auth-link block">
                     Don't have an account? Sign Up
                   </Link>
                 </div>

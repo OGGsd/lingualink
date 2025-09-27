@@ -33,7 +33,7 @@ export const connectDB = async () => {
 // Create database tables
 const createTables = async () => {
   try {
-    // Users table
+    // Users table with email verification and password reset
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -41,6 +41,11 @@ const createTables = async () => {
         full_name VARCHAR(255) NOT NULL,
         password VARCHAR(255) NOT NULL,
         profile_pic TEXT DEFAULT '',
+        email_verified BOOLEAN DEFAULT false,
+        email_verification_token VARCHAR(255),
+        email_verification_expires TIMESTAMP,
+        password_reset_token VARCHAR(255),
+        password_reset_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
@@ -224,6 +229,22 @@ const runMigrations = async () => {
       }
     } else {
       console.log("✅ auto_translate_enabled column already removed or doesn't exist");
+    }
+
+    // 🚨 MIGRATION: Add email verification columns to users table
+    console.log("📝 Adding email verification columns to users table...");
+    try {
+      await pool.query(`
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT false,
+        ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS email_verification_expires TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255),
+        ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP
+      `);
+      console.log("✅ Email verification columns added successfully");
+    } catch (error) {
+      console.log("ℹ️ Email verification columns already exist or error:", error.message);
     }
 
     console.log("✅ All database migrations completed successfully");
